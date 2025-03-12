@@ -14,7 +14,7 @@
       "cwd": "${workspaceFolder}",
       "environment": [],
       "externalConsole": false,
-      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",
@@ -38,7 +38,7 @@
       "cwd": "${workspaceFolder}",
       "environment": [],
       "externalConsole": false,
-      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",
@@ -62,7 +62,7 @@
       "cwd": "${workspaceFolder}",
       "environment": [],
       "externalConsole": false,
-      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",
@@ -81,7 +81,7 @@
       "externalConsole": false,
       "cwd": "/home/angelo/testing/aider-expenses",
       "program": "/home/angelo/testing/aider-expenses/build/Debug/outDebug",
-      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
         {
