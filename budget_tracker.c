@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdlib.h>
+#include <math.h>
 
 int get_category_id(sqlite3 *db, const char *description) {
     printf("Choose category for this item: \"%s\"\n", description);
@@ -270,7 +271,7 @@ void report_budget(int year) {
     }
     sqlite3_finalize(stmt);
 
-    printf("Remaining budget for %d: %.2f\n", year, budget - total_spend);
+    printf("Remaining budget for %d: %.2f\n", year, budget - fabsf(total_spend));
 
     sqlite3_close(db);
 }
