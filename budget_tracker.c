@@ -217,7 +217,64 @@ void report_spend(const char *date_start, const char *date_end, const char *agg)
 
 void report_budget(int year) {
     printf("Reporting budget for year %d\n", year);
-    // TODO: Implement budget reporting logic
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    char sql[256];
+    snprintf(sql, sizeof(sql),
+             "SELECT amount FROM budgets WHERE year = %d;", year);
+
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch budget: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    double budget = 0.0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        budget = sqlite3_column_double(stmt, 0);
+        printf("Budget for %d: %.2f\n", year, budget);
+    } else {
+        printf("No budget set for %d\n", year);
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_finalize(stmt);
+
+    snprintf(sql, sizeof(sql),
+             "SELECT SUM(charge) FROM transactions WHERE strftime('%%Y', date) = '%d';", year);
+
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch total spend: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    double total_spend = 0.0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        total_spend = sqlite3_column_double(stmt, 0);
+        printf("Total spend for %d: %.2f\n", year, total_spend);
+    } else {
+        printf("No transactions found for %d\n", year);
+    }
+    sqlite3_finalize(stmt);
+
+    printf("Remaining budget for %d: %.2f\n", year, budget - total_spend);
+
+    sqlite3_close(db);
 }
 
 int main(int argc, char *argv[]) {
