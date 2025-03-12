@@ -38,6 +38,7 @@ int get_category_id(sqlite3 *db, const char *description) {
     } else if (choice == option - 1) {
         char new_label[256];
         printf("Enter new category label: ");
+        while (getchar() != '\n'); // Clear the input buffer
         fgets(new_label, sizeof(new_label), stdin);
         new_label[strcspn(new_label, "\n")] = 0; // Remove newline character
 
