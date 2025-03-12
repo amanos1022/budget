@@ -215,7 +215,64 @@ void report_spend(const char *date_start, const char *date_end, const char *agg)
 }
 
 void report_budget(int year) {
-    printf("Reporting budget for year %d\n", year);
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    char sql[256];
+    snprintf(sql, sizeof(sql),
+             "SELECT amount FROM budgets WHERE year = %d;", year);
+
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch budget: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    double budget = 0.0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        budget = sqlite3_column_double(stmt, 0);
+        printf("Budget for %d: %.2f\n", year, budget);
+    } else {
+        printf("No budget set for %d\n", year);
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_finalize(stmt);
+
+    snprintf(sql, sizeof(sql),
+             "SELECT SUM(charge) FROM transactions WHERE strftime('%%Y', date) = '%d';", year);
+
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch total spend: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    double total_spend = 0.0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        total_spend = sqlite3_column_double(stmt, 0);
+        printf("Total spend for %d: %.2f\n", year, total_spend);
+    } else {
+        printf("No transactions found for %d\n", year);
+    }
+    sqlite3_finalize(stmt);
+
+    printf("Remaining budget for %d: %.2f\n", year, budget - total_spend);
+
+    sqlite3_close(db);
     sqlite3 *db;
     char *err_msg = 0;
     int rc = sqlite3_open("budget.db", &db);
@@ -297,8 +354,7 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[2], "budget") == 0 && argc >= 4) {
             if (strncmp(argv[3], "--year=", 7) == 0) {
                 int year = atoi(argv[3] + 7); // Skip "--year=" part
-                // Call report_budget function (to be implemented)
-                printf("Report budget for year %d\n", year);
+                report_budget(year);
             } else if (strncmp(argv[3], "--month=", 8) == 0) {
                 const char *month = argv[3] + 8; // Skip "--month=" part
                 // Call report_budget_month function (to be implemented)
