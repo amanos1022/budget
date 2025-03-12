@@ -17,7 +17,7 @@ int get_category_id(sqlite3 *db, const char *description) {
         return -1;
     }
     printf("-------------------------------\n");
-    printf("%-15s | %.2f\n", "Total", total_spend);
+    // printf("%-15s | %.2f\n", "Total", total_spend);
 
     int category_id = 1; // Default to "Other" category
     int option = 1;
