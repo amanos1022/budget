@@ -3,7 +3,8 @@
 sqlite3 budget.db <<EOF
 CREATE TABLE IF NOT EXISTS categories(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    label TEXT UNIQUE
+    label TEXT UNIQUE,
+    regex_pattern TEXT
 );
 
 CREATE TABLE IF NOT EXISTS transactions(
