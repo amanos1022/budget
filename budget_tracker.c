@@ -66,6 +66,70 @@ int get_category_id(sqlite3 *db, const char *description) {
     return category_id;
 }
 
+void report_budget_month(const char *month) {
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    int year;
+    sscanf(month, "%d", &year);
+
+    char sql[256];
+    snprintf(sql, sizeof(sql),
+             "SELECT amount FROM budgets WHERE year = %d;", year);
+
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch budget: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    double yearly_budget = 0.0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        yearly_budget = sqlite3_column_double(stmt, 0);
+        double monthly_budget = yearly_budget / 12;
+        printf("Monthly budget for %s: %.2f\n", month, monthly_budget);
+    } else {
+        printf("No budget set for %d\n", year);
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_finalize(stmt);
+
+    snprintf(sql, sizeof(sql),
+             "SELECT SUM(charge) FROM transactions WHERE strftime('%%Y-%%m', date) = '%s';", month);
+
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch total spend: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    double total_spend = 0.0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        total_spend = sqlite3_column_double(stmt, 0);
+        printf("Total spend for %s: %.2f\n", month, total_spend);
+    } else {
+        printf("No transactions found for %s\n", month);
+    }
+    sqlite3_finalize(stmt);
+
+    printf("Remaining budget for %s: %.2f\n", month, (yearly_budget / 12) - fabs(total_spend));
+
+    sqlite3_close(db);
+
 void import_csv(const char *filename) {
     printf("Importing data from %s\n", filename);
     sqlite3 *db;
@@ -300,8 +364,7 @@ int main(int argc, char *argv[]) {
                 report_budget(year);
             } else if (strncmp(argv[3], "--month=", 8) == 0) {
                 const char *month = argv[3] + 8; // Skip "--month=" part
-                // Call report_budget_month function (to be implemented)
-                printf("Report budget for month %s\n", month);
+                report_budget_month(month);
             } else {
                 printf("Invalid budget report option\n");
             }
