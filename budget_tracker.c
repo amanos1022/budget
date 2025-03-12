@@ -16,7 +16,7 @@ int get_category_id(sqlite3 *db, const char *description) {
         return -1;
     }
 
-    int category_id = -1;
+    int category_id = 1; // Default to "Other" category
     int option = 1;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         int id = sqlite3_column_int(stmt, 0);

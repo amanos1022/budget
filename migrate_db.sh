@@ -19,4 +19,6 @@ CREATE TABLE IF NOT EXISTS budgets(
     year INTEGER PRIMARY KEY,
     amount REAL
 );
+INSERT INTO categories (label) VALUES ('Other');
+
 EOF
