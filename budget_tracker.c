@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 700
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
@@ -209,8 +210,8 @@ int main(int argc, char *argv[]) {
         set_budget(year, amount);
     } else if (strcmp(argv[1], "report") == 0) {
         if (strcmp(argv[2], "spend") == 0 && argc >= 5) {
-            const char *date_start = argv[3] + 12; // Skip "--date-start=" part
-            const char *date_end = argv[4] + 10;   // Skip "--date-end=" part
+            const char *date_start = argv[3] + 13; // Skip "--date-start=" part
+            const char *date_end = argv[4] + 11;   // Skip "--date-end=" part
             report_spend(date_start, date_end);
         } else if (strcmp(argv[2], "budget") == 0 && argc >= 4) {
             if (strncmp(argv[3], "--year=", 7) == 0) {
