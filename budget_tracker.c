@@ -98,7 +98,10 @@ void import_csv(const char *filename) {
         char date[11], charge[20], description[256];
         sscanf(line, "\"%10[^\"]\",\"%19[^\"]\",%*[^,],%*[^,],\"%255[^\"]\"", date, charge, description);
 
-        int category_id = get_category_id(db, description);
+        int category_id = 1; // Default to "Other" category
+        if (atof(charge) < 0) { // Check if the transaction is a debit
+            category_id = get_category_id(db, description);
+        }
         char *insert_sql = sqlite3_mprintf("INSERT INTO transactions (date, charge, description, category_id) VALUES ('%q', %q, '%q', %d);", date, charge, description, category_id);
         rc = sqlite3_exec(db, insert_sql, 0, 0, &err_msg);
         sqlite3_free(insert_sql);
