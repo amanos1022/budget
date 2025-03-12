@@ -28,6 +28,10 @@ int get_category_id(sqlite3 *db, const char *description) {
         const unsigned char *label = sqlite3_column_text(stmt, 1);
         const unsigned char *pattern = sqlite3_column_text(stmt, 2);
 
+        if (pattern == NULL) {
+            continue;  // Skip this row if the regex pattern is NULL
+        }
+
         // Compile the regex pattern
         if (regcomp(&regex, (const char *)pattern, REG_EXTENDED) == 0) {
             // Check if the description matches the regex pattern
