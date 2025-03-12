@@ -165,8 +165,27 @@ int main(int argc, char *argv[]) {
         int year = atoi(argv[2] + 7); // Skip "--year=" part
         double amount = atof(argv[3] + 9); // Skip "--amount=" part
         set_budget(year, amount);
-    } else if (strcmp(argv[1], "report") == 0 && argc == 4 && strcmp(argv[2], "budget") == 0) {
-        report_budget(atoi(argv[3] + 7)); // Skip "--year=" part
+    } else if (strcmp(argv[1], "report") == 0) {
+        if (strcmp(argv[2], "spend") == 0 && argc >= 5) {
+            const char *date_start = argv[3] + 12; // Skip "--date-start=" part
+            const char *date_end = argv[4] + 10;   // Skip "--date-end=" part
+            // Call report_spend function (to be implemented)
+            printf("Report spend from %s to %s\n", date_start, date_end);
+        } else if (strcmp(argv[2], "budget") == 0 && argc >= 4) {
+            if (strncmp(argv[3], "--year=", 7) == 0) {
+                int year = atoi(argv[3] + 7); // Skip "--year=" part
+                // Call report_budget function (to be implemented)
+                printf("Report budget for year %d\n", year);
+            } else if (strncmp(argv[3], "--month=", 8) == 0) {
+                const char *month = argv[3] + 8; // Skip "--month=" part
+                // Call report_budget_month function (to be implemented)
+                printf("Report budget for month %s\n", month);
+            } else {
+                printf("Invalid budget report option\n");
+            }
+        } else {
+            printf("Invalid report command or options\n");
+        }
     } else {
         printf("Invalid command or options\n");
     }
