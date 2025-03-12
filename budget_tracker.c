@@ -5,6 +5,60 @@
 #include <time.h>
 #include <stdlib.h>
 
+int get_category_id(sqlite3 *db, const char *description) {
+    printf("Choose category for this item: \"%s\"\n", description);
+    char *err_msg = 0;
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, "SELECT id, label FROM categories", -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch categories: %s\n", sqlite3_errmsg(db));
+        return -1;
+    }
+
+    int category_id = -1;
+    int option = 1;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        int id = sqlite3_column_int(stmt, 0);
+        const unsigned char *label = sqlite3_column_text(stmt, 1);
+        printf("[%d] %s\n", option++, label);
+    }
+    printf("[%d] Enter new category\n", option);
+
+    int choice;
+    scanf("%d", &choice);
+
+    if (choice == option) {
+        char new_label[256];
+        printf("Enter new category label: ");
+        scanf("%s", new_label);
+
+        char *sql = sqlite3_mprintf("INSERT INTO categories (label) VALUES ('%q');", new_label);
+        rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+        sqlite3_free(sql);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", err_msg);
+            sqlite3_free(err_msg);
+        } else {
+            category_id = (int)sqlite3_last_insert_rowid(db);
+        }
+    } else {
+        sqlite3_reset(stmt);
+        option = 1;
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            if (option == choice) {
+                category_id = sqlite3_column_int(stmt, 0);
+                break;
+            }
+            option++;
+        }
+    }
+
+    sqlite3_finalize(stmt);
+    return category_id;
+}
+
 void import_csv(const char *filename) {
     printf("Importing data from %s\n", filename);
     sqlite3 *db;
@@ -60,59 +114,6 @@ void import_csv(const char *filename) {
     sqlite3_close(db);
 }
 
-int get_category_id(sqlite3 *db, const char *description) {
-    printf("Choose category for this item: \"%s\"\n", description);
-    char *err_msg = 0;
-    sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, "SELECT id, label FROM categories", -1, &stmt, 0);
-
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to fetch categories: %s\n", sqlite3_errmsg(db));
-        return -1;
-    }
-
-    int category_id = -1;
-    int option = 1;
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        int id = sqlite3_column_int(stmt, 0);
-        const unsigned char *label = sqlite3_column_text(stmt, 1);
-        printf("[%d] %s\n", option++, label);
-    }
-    printf("[%d] Enter new category\n", option);
-
-    int choice;
-    scanf("%d", &choice);
-
-    if (choice == option) {
-        char new_label[256];
-        printf("Enter new category label: ");
-        scanf("%s", new_label);
-
-        char *sql = sqlite3_mprintf("INSERT INTO categories (label) VALUES ('%q');", new_label);
-        rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
-        sqlite3_free(sql);
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", err_msg);
-            sqlite3_free(err_msg);
-        } else {
-            category_id = (int)sqlite3_last_insert_rowid(db);
-        }
-    } else {
-        sqlite3_reset(stmt);
-        option = 1;
-        while (sqlite3_step(stmt) == SQLITE_ROW) {
-            if (option == choice) {
-                category_id = sqlite3_column_int(stmt, 0);
-                break;
-            }
-            option++;
-        }
-    }
-
-    sqlite3_finalize(stmt);
-    return category_id;
-}
 
 void set_budget(int year, double amount) {
     printf("Setting budget for year %d with amount %.2f\n", year, amount);
