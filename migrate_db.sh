@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS categories(
 
 CREATE TABLE IF NOT EXISTS transactions(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT,
+    date DATE,
     charge REAL,
     description TEXT,
     category_id INTEGER,
