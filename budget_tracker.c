@@ -148,6 +148,42 @@ void set_budget(int year, double amount) {
     sqlite3_close(db);
 }
 
+void report_spend(const char *date_start, const char *date_end) {
+    printf("Reporting spend from %s to %s\n", date_start, date_end);
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    char sql[512];
+    snprintf(sql, sizeof(sql),
+             "SELECT c.label, SUM(t.charge) FROM transactions t "
+             "JOIN categories c ON t.category_id = c.id "
+             "WHERE t.date BETWEEN '%s' AND '%s' "
+             "GROUP BY c.label;", date_start, date_end);
+
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch report: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        printf("%s: %.2f\n", sqlite3_column_text(stmt, 0), sqlite3_column_double(stmt, 1));
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
+
 void report_budget(int year) {
     printf("Reporting budget for year %d\n", year);
     // TODO: Implement budget reporting logic
@@ -169,8 +205,7 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[2], "spend") == 0 && argc >= 5) {
             const char *date_start = argv[3] + 12; // Skip "--date-start=" part
             const char *date_end = argv[4] + 10;   // Skip "--date-end=" part
-            // Call report_spend function (to be implemented)
-            printf("Report spend from %s to %s\n", date_start, date_end);
+            report_spend(date_start, date_end);
         } else if (strcmp(argv[2], "budget") == 0 && argc >= 4) {
             if (strncmp(argv[3], "--year=", 7) == 0) {
                 int year = atoi(argv[3] + 7); // Skip "--year=" part
