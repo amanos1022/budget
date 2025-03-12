@@ -32,7 +32,8 @@ int get_category_id(sqlite3 *db, const char *description) {
     if (choice == option - 1) {
         char new_label[256];
         printf("Enter new category label: ");
-        scanf("%s", new_label);
+        fgets(new_label, sizeof(new_label), stdin);
+        new_label[strcspn(new_label, "\n")] = 0; // Remove newline character
 
         char *sql = sqlite3_mprintf("INSERT INTO categories (label) VALUES ('%q');", new_label);
         rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
