@@ -32,10 +32,10 @@ int get_category_id(sqlite3 *db, const char *description) {
     int choice;
     scanf("%d", &choice);
 
-    if (choice == option - 1) {
+    if (choice == option) {
         // Skip the item
         return -1;
-    } else if (choice == option - 2) {
+    } else if (choice == option - 1) {
         char new_label[256];
         printf("Enter new category label: ");
         fgets(new_label, sizeof(new_label), stdin);
