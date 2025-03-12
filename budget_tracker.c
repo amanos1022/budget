@@ -113,15 +113,49 @@ void create_category(const char *label, const char *regex_pattern) {
         return;
     }
 
-    char *sql = sqlite3_mprintf("INSERT INTO categories (label, regex_pattern) VALUES ('%q', '%q');", label, regex_pattern);
-    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
-    sqlite3_free(sql);
+    // Check if the category already exists
+    char *check_sql = sqlite3_mprintf("SELECT id FROM categories WHERE label = '%q';", label);
+    sqlite3_stmt *check_stmt;
+    rc = sqlite3_prepare_v2(db, check_sql, -1, &check_stmt, 0);
+    sqlite3_free(check_sql);
 
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "SQL error: %s\n", err_msg);
-        sqlite3_free(err_msg);
+        fprintf(stderr, "Failed to check existing category: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(check_stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    int category_id = -1;
+    if (sqlite3_step(check_stmt) == SQLITE_ROW) {
+        category_id = sqlite3_column_int(check_stmt, 0);
+    }
+    sqlite3_finalize(check_stmt);
+
+    if (category_id != -1) {
+        // Update the regex pattern if the category exists
+        char *update_sql = sqlite3_mprintf("UPDATE categories SET regex_pattern = '%q' WHERE id = %d;", regex_pattern, category_id);
+        rc = sqlite3_exec(db, update_sql, 0, 0, &err_msg);
+        sqlite3_free(update_sql);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", err_msg);
+            sqlite3_free(err_msg);
+        } else {
+            printf("Updated category: %s with new regex: %s\n", label, regex_pattern);
+        }
     } else {
-        printf("Category created: %s with regex: %s\n", label, regex_pattern);
+        // Insert new category if it does not exist
+        char *sql = sqlite3_mprintf("INSERT INTO categories (label, regex_pattern) VALUES ('%q', '%q');", label, regex_pattern);
+        rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+        sqlite3_free(sql);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", err_msg);
+            sqlite3_free(err_msg);
+        } else {
+            printf("Category created: %s with regex: %s\n", label, regex_pattern);
+        }
     }
 
     sqlite3_close(db);
