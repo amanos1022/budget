@@ -129,6 +129,7 @@ void report_budget_month(const char *month) {
     printf("Remaining budget for %s: %.2f\n", month, (yearly_budget / 12) - fabs(total_spend));
 
     sqlite3_close(db);
+}
 
 void import_csv(const char *filename) {
     printf("Importing data from %s\n", filename);
