@@ -103,6 +103,30 @@ int get_category_id(sqlite3 *db, const char *description) {
     return category_id;
 }
 
+void create_category(const char *label, const char *regex_pattern) {
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    char *sql = sqlite3_mprintf("INSERT INTO categories (label, regex_pattern) VALUES ('%q', '%q');", label, regex_pattern);
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    sqlite3_free(sql);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+        sqlite3_free(err_msg);
+    } else {
+        printf("Category created: %s with regex: %s\n", label, regex_pattern);
+    }
+
+    sqlite3_close(db);
+}
+
 void report_budget_month(const char *month) {
     sqlite3 *db;
     char *err_msg = 0;
@@ -419,6 +443,10 @@ int main(int argc, char *argv[]) {
         int year = atoi(argv[2] + 7); // Skip "--year=" part
         double amount = atof(argv[3] + 9); // Skip "--amount=" part
         set_budget(year, amount);
+    } else if (strcmp(argv[1], "create-category") == 0 && argc == 5) {
+        const char *label = argv[2] + 8; // Skip "--label=" part
+        const char *regex_pattern = argv[3] + 9; // Skip "--regex=" part
+        create_category(label, regex_pattern);
     } else if (strcmp(argv[1], "report") == 0) {
         if (strcmp(argv[2], "spend") == 0 && argc >= 5) {
             const char *date_start = argv[3] + 13; // Skip "--date-start=" part
