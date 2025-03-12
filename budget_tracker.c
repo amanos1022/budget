@@ -16,6 +16,8 @@ int get_category_id(sqlite3 *db, const char *description) {
         fprintf(stderr, "Failed to fetch categories: %s\n", sqlite3_errmsg(db));
         return -1;
     }
+    printf("-------------------------------\n");
+    printf("%-15s | %.2f\n", "Total", total_spend);
 
     int category_id = 1; // Default to "Other" category
     int option = 1;
@@ -155,7 +157,7 @@ void set_budget(int year, double amount) {
     sqlite3_close(db);
 }
 
-void report_spend(const char *date_start, const char *date_end) {
+void report_spend(const char *date_start, const char *date_end, const char *agg) {
     printf("Reporting spend from %s to %s\n", date_start, date_end);
     sqlite3 *db;
     char *err_msg = 0;
@@ -168,11 +170,27 @@ void report_spend(const char *date_start, const char *date_end) {
     }
 
     char sql[512];
-    snprintf(sql, sizeof(sql),
-             "SELECT c.label, SUM(t.charge) FROM transactions t "
-             "JOIN categories c ON t.category_id = c.id "
-             "WHERE t.date BETWEEN '%s' AND '%s' "
-             "GROUP BY c.label;", date_start, date_end);
+    if (agg == NULL) {
+        snprintf(sql, sizeof(sql),
+                 "SELECT c.label, SUM(t.charge) FROM transactions t "
+                 "JOIN categories c ON t.category_id = c.id "
+                 "WHERE t.date BETWEEN '%s' AND '%s' "
+                 "GROUP BY c.label;", date_start, date_end);
+    } else if (strcmp(agg, "yearly") == 0) {
+        snprintf(sql, sizeof(sql),
+                 "SELECT strftime('%%Y', t.date) AS year, SUM(t.charge) FROM transactions t "
+                 "WHERE t.date BETWEEN '%s' AND '%s' "
+                 "GROUP BY year;", date_start, date_end);
+    } else if (strcmp(agg, "monthly") == 0) {
+        snprintf(sql, sizeof(sql),
+                 "SELECT strftime('%%Y-%%m', t.date) AS month, SUM(t.charge) FROM transactions t "
+                 "WHERE t.date BETWEEN '%s' AND '%s' "
+                 "GROUP BY month;", date_start, date_end);
+    } else {
+        fprintf(stderr, "Invalid aggregation option\n");
+        sqlite3_close(db);
+        return;
+    }
 
     sqlite3_stmt *stmt;
     rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
@@ -183,8 +201,14 @@ void report_spend(const char *date_start, const char *date_end) {
         return;
     }
 
+    double total_spend = 0.0;
+    printf("%-15s | %s\n", agg ? (strcmp(agg, "yearly") == 0 ? "Year" : "Month") : "Category", "Spend");
+    printf("-------------------------------\n");
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-        printf("%s: %.2f\n", sqlite3_column_text(stmt, 0), sqlite3_column_double(stmt, 1));
+        const char *label = (const char *)sqlite3_column_text(stmt, 0);
+        double spend = sqlite3_column_double(stmt, 1);
+        printf("%-15s | %.2f\n", label, spend);
+        total_spend += spend;
     }
 
     sqlite3_finalize(stmt);
@@ -212,7 +236,8 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[2], "spend") == 0 && argc >= 5) {
             const char *date_start = argv[3] + 13; // Skip "--date-start=" part
             const char *date_end = argv[4] + 11;   // Skip "--date-end=" part
-            report_spend(date_start, date_end);
+            const char *agg = (argc == 6) ? argv[5] + 6 : NULL; // Skip "--agg=" part if present
+            report_spend(date_start, date_end, agg);
         } else if (strcmp(argv[2], "budget") == 0 && argc >= 4) {
             if (strncmp(argv[3], "--year=", 7) == 0) {
                 int year = atoi(argv[3] + 7); // Skip "--year=" part
