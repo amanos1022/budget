@@ -33,6 +33,9 @@ int get_category_id(sqlite3 *db, const char *description) {
     scanf("%d", &choice);
 
     if (choice == option - 1) {
+        // Skip the item
+        return -1;
+    } else if (choice == option - 2) {
         char new_label[256];
         printf("Enter new category label: ");
         fgets(new_label, sizeof(new_label), stdin);
@@ -48,9 +51,6 @@ int get_category_id(sqlite3 *db, const char *description) {
         } else {
             category_id = (int)sqlite3_last_insert_rowid(db);
         }
-    } else if (choice != option) {
-        // Skip the item
-        return -1;
     } else {
         option = 1;
         while (sqlite3_step(stmt) == SQLITE_ROW) {
