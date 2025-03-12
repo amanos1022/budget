@@ -3,13 +3,10 @@
   "configurations": [
     {
       "name": "Debug Import Command",
-      "type": "cppdbg",
+      "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/budget_tracker",
-      "args": [
-        "import",
-        "--csv=data.csv"
-      ],
+      "args": ["import", "--csv=data.csv"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
@@ -29,11 +26,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/budget_tracker",
-      "args": [
-        "set-budget",
-        "--year=2025",
-        "--amount=10000"
-      ],
+      "args": ["set-budget", "--year=2025", "--amount=10000"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
@@ -53,11 +46,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/budget_tracker",
-      "args": [
-        "report",
-        "budget",
-        "--year=2025"
-      ],
+      "args": ["report", "budget", "--year=2025"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
