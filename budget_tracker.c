@@ -176,6 +176,29 @@ void import_csv(const char *filename) {
         char formatted_date[11];
         strftime(formatted_date, sizeof(formatted_date), "%Y-%m-%d", &tm);
 
+        // Check if the transaction already exists
+        char *check_sql = sqlite3_mprintf("SELECT COUNT(*) FROM transactions WHERE date = '%q' AND charge = %q AND description = '%q';", formatted_date, charge, description);
+        sqlite3_stmt *check_stmt;
+        rc = sqlite3_prepare_v2(db, check_sql, -1, &check_stmt, 0);
+        sqlite3_free(check_sql);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to check existing transaction: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(check_stmt);
+            continue;
+        }
+
+        int exists = 0;
+        if (sqlite3_step(check_stmt) == SQLITE_ROW) {
+            exists = sqlite3_column_int(check_stmt, 0);
+        }
+        sqlite3_finalize(check_stmt);
+
+        if (exists) {
+            printf("Transaction already exists, skipping: %s, %s, %s\n", formatted_date, charge, description);
+            continue;
+        }
+
         int category_id = 1; // Default to "Other" category
         if (atof(charge) < 0) { // Check if the transaction is a debit
             category_id = get_category_id(db, description);
