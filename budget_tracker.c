@@ -17,7 +17,6 @@ int get_category_id(sqlite3 *db, const char *description) {
         fprintf(stderr, "Failed to fetch categories: %s\n", sqlite3_errmsg(db));
         return -1;
     }
-    printf("-------------------------------\n");
 
     int category_id = 1; // Default to "Other" category
     int option = 1;
