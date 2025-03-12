@@ -59,9 +59,30 @@ void import_csv(const char *filename) {
     sqlite3_close(db);
 }
 
-void set_budget(int year) {
-    printf("Setting budget for year %d\n", year);
-    // TODO: Implement budget setting logic
+void set_budget(int year, double amount) {
+    printf("Setting budget for year %d with amount %.2f\n", year, amount);
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    char *sql = sqlite3_mprintf("INSERT INTO budgets (year, amount) VALUES (%d, %f) "
+                                "ON CONFLICT(year) DO UPDATE SET amount=excluded.amount;", year, amount);
+
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    sqlite3_free(sql);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+        sqlite3_free(err_msg);
+    }
+
+    sqlite3_close(db);
 }
 
 void report_budget(int year) {
@@ -77,8 +98,10 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(argv[1], "import") == 0 && argc == 3) {
         import_csv(argv[2] + 6); // Skip "--csv=" part
-    } else if (strcmp(argv[1], "set-budget") == 0 && argc == 3) {
-        set_budget(atoi(argv[2] + 7)); // Skip "--year=" part
+    } else if (strcmp(argv[1], "set-budget") == 0 && argc == 4) {
+        int year = atoi(argv[2] + 7); // Skip "--year=" part
+        double amount = atof(argv[3] + 9); // Skip "--amount=" part
+        set_budget(year, amount);
     } else if (strcmp(argv[1], "report") == 0 && argc == 4 && strcmp(argv[2], "budget") == 0) {
         report_budget(atoi(argv[3] + 7)); // Skip "--year=" part
     } else {
