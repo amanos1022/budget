@@ -209,6 +209,12 @@ void import_csv(const char *filename) {
         char formatted_date[11];
         strftime(formatted_date, sizeof(formatted_date), "%Y-%m-%d", &tm);
 
+        // Check if the charge is positive (credit), skip if it is
+        if (atof(charge) > 0) {
+            printf("Skipping credit transaction: %s, %s, %s\n", formatted_date, charge, description);
+            continue;
+        }
+
         // Check if the transaction already exists
         char *check_sql = sqlite3_mprintf("SELECT COUNT(*) FROM transactions WHERE date = '%q' AND charge = %q AND description = '%q';", formatted_date, charge, description);
         sqlite3_stmt *check_stmt;
