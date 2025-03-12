@@ -443,7 +443,7 @@ int main(int argc, char *argv[]) {
         int year = atoi(argv[2] + 7); // Skip "--year=" part
         double amount = atof(argv[3] + 9); // Skip "--amount=" part
         set_budget(year, amount);
-    } else if (strcmp(argv[1], "create-category") == 0 && argc == 5) {
+    } else if (strcmp(argv[1], "create-category") == 0 && argc == 4) {
         const char *label = argv[2] + 8; // Skip "--label=" part
         const char *regex_pattern = argv[3] + 9; // Skip "--regex=" part
         create_category(label, regex_pattern);
