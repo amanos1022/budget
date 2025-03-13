@@ -7,28 +7,39 @@
 #include <stdlib.h>
 #include <math.h>
 #include <regex.h>
+#include <json-c/json.h>
 
 int get_category_id(sqlite3 *db, const char *description) {
-    printf("Choose category for this item: \"%s\"\n", description);
-    char *err_msg = 0;
-    sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, "SELECT id, label FROM categories", -1, &stmt, 0);
+    int category_id = -1; // Default to -1 indicating no match found
 
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to fetch categories: %s\n", sqlite3_errmsg(db));
+    // Use the category-infer command to infer the category
+    char command[512];
+    snprintf(command, sizeof(command), "python expense-categorizer/src/main.py category-infer --description=\"%s\"", description);
+
+    FILE *fp = popen(command, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Failed to run category-infer command\n");
         return -1;
     }
 
-    sqlite3_finalize(stmt);
+    char buffer[1024];
+    if (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        struct json_object *parsed_json;
+        struct json_object *labels;
+        struct json_object *first_label;
+        struct json_object *id;
 
-    int category_id = -1; // Default to -1 indicating no match found
+        parsed_json = json_tokener_parse(buffer);
+        json_object_object_get_ex(parsed_json, "labels", &labels);
+        first_label = json_object_array_get_idx(labels, 0);
+        json_object_object_get_ex(first_label, "id", &id);
 
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        int id = sqlite3_column_int(stmt, 0);
-        const unsigned char *label = sqlite3_column_text(stmt, 1);
+        category_id = json_object_get_int(id);
+
+        json_object_put(parsed_json); // Free memory
     }
 
-    sqlite3_finalize(stmt);
+    pclose(fp);
 
     // If no match found, prompt for category
     int option = 1;
