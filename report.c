@@ -188,26 +188,44 @@ void report_spend(const char *date_start, const char *date_end, const char *agg,
         return;
     }
 
-    double total_spend = 0.0;
-    double spend = 0.0;
-    if (agg == NULL) {
-        printf("%-20s | %s\n", "Category", "Spend");
-        printf("-------------------------------\n");
+    if (output_format && strcmp(output_format, "json") == 0) {
+        struct json_object *jarray = json_object_new_array();
         while (sqlite3_step(stmt) == SQLITE_ROW) {
-            const char *label = (const char *)sqlite3_column_text(stmt, 0);
-            spend = sqlite3_column_double(stmt, 1);
-            printf("%-20s | %.2f\n", label, spend);
+            struct json_object *jobj = json_object_new_object();
+            if (agg == NULL) {
+                json_object_object_add(jobj, "category", json_object_new_string((const char *)sqlite3_column_text(stmt, 0)));
+                json_object_object_add(jobj, "spend", json_object_new_double(sqlite3_column_double(stmt, 1)));
+            } else {
+                json_object_object_add(jobj, agg ? (strcmp(agg, "yearly") == 0 ? "year" : "month") : "category", json_object_new_string((const char *)sqlite3_column_text(stmt, 0)));
+                json_object_object_add(jobj, "category", json_object_new_string((const char *)sqlite3_column_text(stmt, 1)));
+                json_object_object_add(jobj, "spend", json_object_new_double(sqlite3_column_double(stmt, 2)));
+            }
+            json_object_array_add(jarray, jobj);
         }
+        printf("%s\n", json_object_to_json_string(jarray));
+        json_object_put(jarray);
     } else {
-        printf("%-10s | %-20s | %s\n", agg ? (strcmp(agg, "yearly") == 0 ? "Year" : "Month") : "Category", "Category", "Spend");
-        printf("---------------------------------------------\n");
-        while (sqlite3_step(stmt) == SQLITE_ROW) {
-            const char *period = (const char *)sqlite3_column_text(stmt, 0);
-            const char *label = (const char *)sqlite3_column_text(stmt, 1);
-            spend = sqlite3_column_double(stmt, 2);
-            printf("%-10s | %-20s | %.2f\n", period, label, spend);
+        double total_spend = 0.0;
+        double spend = 0.0;
+        if (agg == NULL) {
+            printf("%-20s | %s\n", "Category", "Spend");
+            printf("-------------------------------\n");
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                const char *label = (const char *)sqlite3_column_text(stmt, 0);
+                spend = sqlite3_column_double(stmt, 1);
+                printf("%-20s | %.2f\n", label, spend);
+            }
+        } else {
+            printf("%-10s | %-20s | %s\n", agg ? (strcmp(agg, "yearly") == 0 ? "Year" : "Month") : "Category", "Category", "Spend");
+            printf("---------------------------------------------\n");
+            while (sqlite3_step(stmt) == SQLITE_ROW) {
+                const char *period = (const char *)sqlite3_column_text(stmt, 0);
+                const char *label = (const char *)sqlite3_column_text(stmt, 1);
+                spend = sqlite3_column_double(stmt, 2);
+                printf("%-10s | %-20s | %.2f\n", period, label, spend);
+            }
+            total_spend += spend;
         }
-        total_spend += spend;
     }
 
     sqlite3_finalize(stmt);
