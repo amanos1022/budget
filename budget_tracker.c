@@ -40,6 +40,52 @@ void set_budget(int year, double amount) {
     sqlite3_close(db);
 }
 
+void transaction_list(const char *start_date, const char *end_date, const char *excluded_categories) {
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    char exclude_clause[512] = "";
+    if (excluded_categories) {
+        snprintf(exclude_clause, sizeof(exclude_clause),
+                 "AND t.category_id NOT IN (%s)", excluded_categories);
+    }
+
+    char sql[512];
+    snprintf(sql, sizeof(sql),
+             "SELECT t.date, t.charge, t.description, c.label FROM transactions t "
+             "JOIN categories c ON t.category_id = c.id "
+             "WHERE t.date BETWEEN '%s' AND '%s' %s "
+             "ORDER BY t.date;", start_date, end_date, exclude_clause);
+
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch transactions: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    printf("%-12s | %-10s | %-30s | %s\n", "Date", "Charge", "Description", "Category");
+    printf("-------------------------------------------------------------------------------\n");
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        const char *date = (const char *)sqlite3_column_text(stmt, 0);
+        double charge = sqlite3_column_double(stmt, 1);
+        const char *description = (const char *)sqlite3_column_text(stmt, 2);
+        const char *category = (const char *)sqlite3_column_text(stmt, 3);
+        printf("%-12s | %-10.2f | %-30s | %s\n", date, charge, description, category);
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("Usage: %s <command> [options]\n", argv[0]);
