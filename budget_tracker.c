@@ -25,9 +25,29 @@ int get_category_id(sqlite3 *db, const char *description) {
     curl = curl_easy_init();
     if(curl) {
         char post_data[1024];
+        const char *MODEL = "gpt-4";
         snprintf(post_data, sizeof(post_data),
-                 "{\"model\": \"text-davinci-003\", \"prompt\": \"Categorize the following transaction: '%s'.\", \"max_tokens\": 10}",
-                 description);
+                 "{\"model\": \"%s\", \"messages\": [{\"role\": \"user\", \"content\": \""
+                 "You are a financial assistant that categorizes transactions.\\n"
+                 "Categories:\\n"
+                 "- **Groceries**: Supermarkets, Walmart, H-E-B, Lowe's Market\\n"
+                 "- **Dining**: Restaurants, cafes, Starbucks, McDonald's, bars\\n"
+                 "- **Fuel**: Gas stations, Shell, Exxon, 7-Eleven fuel purchases\\n"
+                 "- **Utilities**: Electricity, water, gas, internet bills\\n"
+                 "- **Entertainment**: Movie theaters, amusement parks, Netflix, Spotify\\n"
+                 "- **Online Shopping**: Amazon, eBay, digital purchases\\n"
+                 "- **Other**: Transactions that do not fit in the above categories.\\n\\n"
+                 "Examples:\\n"
+                 "1. \\\\\"Starbucks Store 58509 Lago Vista TX\\\\\" → **Dining**\\n"
+                 "2. \\\\\"Walmart Supercenter #1234\\\\\" → **Groceries**\\n"
+                 "3. \\\\\"Shell Gas Station #5678\\\\\" → **Fuel**\\n"
+                 "4. \\\\\"Amazon Purchase - Wireless Headphones\\\\\" → **Online Shopping**\\n"
+                 "5. \\\\\"Cedar Park Electric Utility Bill\\\\\" → **Utilities**\\n"
+                 "6. \\\\\"Disney+ Subscription\\\\\" → **Entertainment**\\n\\n"
+                 "Now classify this transaction:\\n"
+                 "\\\"%s\\\"\\n"
+                 "Return only the category name as a string.\"}]}",
+                 MODEL, description);
 
         headers = curl_slist_append(headers, "Content-Type: application/json");
         char auth_header[256];
