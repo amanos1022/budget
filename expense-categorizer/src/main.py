@@ -19,6 +19,7 @@ def infer_category(description):
 
     # Prepare candidate labels
     candidate_labels = [f"{label}, {desc}" for label, desc in categories]
+    category_ids = [category[0] for category in categories]
 
     # Initialize the zero-shot classification pipeline
     classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
@@ -29,7 +30,7 @@ def infer_category(description):
     # Format the result
     formatted_result = {
         "labels": [
-            {"label": label.split(",")[0], "id": idx + 1}
+            {"label": label.split(",")[0], "id": category_ids[idx]}
             for idx, label in enumerate(result["labels"])
         ],
         "scores": result["scores"],
