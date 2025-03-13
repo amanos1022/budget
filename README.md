@@ -40,7 +40,7 @@ The Budget Tracker is a command-line application that helps users manage their f
 4. **Compile the Application:**
    Compile the C source code to create the executable.
    ```bash
-   gcc -o budget_tracker budget_tracker.c -lsqlite3 -lm
+   gcc -g -O0 -Wall -o budget_tracker budget_tracker.c report.c import.c category.c -lsqlite3 -ljson-c -lcurl
    ```
 
 ## Usage
