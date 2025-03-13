@@ -11,12 +11,18 @@
 
 #include <curl/curl.h>
 
+size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t totalSize = size * nmemb;
+    strncat((char *)userp, (char *)contents, totalSize);
+    return totalSize;
+}
+
 int get_category_id(sqlite3 *db, const char *description) {
     int category_id = -1; // Default to -1 indicating no match found
     CURL *curl;
     CURLcode res;
     struct curl_slist *headers = NULL;
-    char *api_key = getenv("OPENAI_API_KEY");
+    char *api_key = getevn("OPENAI_API_KEY");
     if (!api_key) {
         fprintf(stderr, "OpenAI API key not set in environment\n");
         return -1;
@@ -24,37 +30,67 @@ int get_category_id(sqlite3 *db, const char *description) {
 
     curl = curl_easy_init();
     if(curl) {
-        char post_data[1024];
-        const char *MODEL = "gpt-4";
-        snprintf(post_data, sizeof(post_data),
-                 "{\"model\": \"%s\", \"messages\": [{\"role\": \"user\", \"content\": \""
-                 "You are a financial assistant that categorizes transactions.\\n"
-                 "Categories:\\n"
-                 "- **Groceries**: Supermarkets, Walmart, H-E-B, Lowe's Market\\n"
-                 "- **Dining**: Restaurants, cafes, Starbucks, McDonald's, bars\\n"
-                 "- **Fuel**: Gas stations, Shell, Exxon, 7-Eleven fuel purchases\\n"
-                 "- **Utilities**: Electricity, water, gas, internet bills\\n"
-                 "- **Entertainment**: Movie theaters, amusement parks, Netflix, Spotify\\n"
-                 "- **Online Shopping**: Amazon, eBay, digital purchases\\n"
-                 "- **Other**: Transactions that do not fit in the above categories.\\n\\n"
-                 "Examples:\\n"
-                 "1. \\\\\"Starbucks Store 58509 Lago Vista TX\\\\\" → **Dining**\\n"
-                 "2. \\\\\"Walmart Supercenter #1234\\\\\" → **Groceries**\\n"
-                 "3. \\\\\"Shell Gas Station #5678\\\\\" → **Fuel**\\n"
-                 "4. \\\\\"Amazon Purchase - Wireless Headphones\\\\\" → **Online Shopping**\\n"
-                 "5. \\\\\"Cedar Park Electric Utility Bill\\\\\" → **Utilities**\\n"
-                 "6. \\\\\"Disney+ Subscription\\\\\" → **Entertainment**\\n\\n"
-                 "Now classify this transaction:\\n"
-                 "\\\"%s\\\"\\n"
-                 "Return only the category name as a string.\"}]}",
-                 MODEL, description);
+        const char *MODEL = "gpt-4o-mini";
+        char post_data[4096];
+
+        // Retrieve categories and examples from the database
+        sqlite3_stmt *stmt;
+        char categories_query[] = "SELECT c.label, c.description, e.example FROM categories c LEFT JOIN category_examples e ON c.id = e.category_id";
+        int rc = sqlite3_prepare_v2(db, categories_query, -1, &stmt, 0);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to fetch categories and examples: %s\n", sqlite3_errmsg(db));
+            return -1;
+        }
+
+        // Construct the prompt dynamically
+        char categories_part[2048] = "Categories:\\n";
+        char examples_part[2048] = "Examples:\\n";
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char *label = (const char *)sqlite3_column_text(stmt, 0);
+            const char *description = (const char *)sqlite3_column_text(stmt, 1);
+            const char *example = (const char *)sqlite3_column_text(stmt, 2);
+
+            if (label && description) {
+                strcat(categories_part, "- ");
+                strcat(categories_part, label);
+                strcat(categories_part, ": ");
+                strcat(categories_part, description);
+                strcat(categories_part, "\\n");
+            }
+
+            if (example) {
+                strcat(examples_part, example);
+                strcat(examples_part, "\\n");
+            }
+        }
+        sqlite3_finalize(stmt);
+
+        // Format the JSON request properly
+        int written = snprintf(post_data, sizeof(post_data),
+            "{"
+            "\"model\": \"%s\","
+            "\"messages\": [{\"role\": \"user\", \"content\": \""
+            "You are a financial assistant that categorizes transactions.\\n"
+            "%s"
+            "%s"
+            "Now classify this transaction:\\n"
+            "\\\"%s\\\"\\n"
+            "Return only the category name as a string.\"}]}",
+            MODEL, categories_part, examples_part, description);
+
+        // Ensure snprintf didn't truncate output
+        if (written < 0 || written >= sizeof(post_data)) {
+            fprintf(stderr, "Error: JSON request is too long or snprintf failed.\n");
+            return 0;
+        }
 
         headers = curl_slist_append(headers, "Content-Type: application/json");
         char auth_header[256];
         snprintf(auth_header, sizeof(auth_header), "Authorization: Bearer %s", api_key);
         headers = curl_slist_append(headers, auth_header);
 
-        curl_easy_setopt(curl, CURLOPT_URL, "https://api.openai.com/v1/completions");
+        curl_easy_setopt(curl, CURLOPT_URL, "https://api.openai.com/v1/chat/completions");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
 
@@ -63,18 +99,23 @@ int get_category_id(sqlite3 *db, const char *description) {
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         } else {
             // Parse the response to extract the category name
-            char buffer[1024];
-            res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &buffer);
+            // char buffer[4096];
+            char buffer[4096] = {0}; // Initialize buffer to store response
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, buffer);
+            res = curl_easy_perform(curl);
             if (res == CURLE_OK) {
                 struct json_object *parsed_json;
                 struct json_object *choices;
+                struct json_object *choice;
                 struct json_object *message;
                 struct json_object *content;
 
                 parsed_json = json_tokener_parse(buffer);
                 json_object_object_get_ex(parsed_json, "choices", &choices);
-                message = json_object_array_get_idx(choices, 0);
-                json_object_object_get_ex(message, "message", &content);
+                choice = json_object_array_get_idx(choices, 0);
+                json_object_object_get_ex(choice, "message", &message);
+                json_object_object_get_ex(message, "content", &content);
                 const char *category_name = json_object_get_string(content);
 
                 // Query the database to get the category_id

@@ -6,7 +6,7 @@
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/budget_tracker",
-      "args": ["import", "--csv=data.csv", "--overwrite"],
+      "args": ["import", "--csv=credit-card.csv", "--overwrite"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
@@ -21,7 +21,31 @@
       ],
       "preLaunchTask": "build",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/expense-categorizer/src"
+        "PYTHONPATH": "${workspaceFolder}/expense-categorizer/src",
+        "OPENAI_API_KEY": "***"
+      }
+    },
+    {
+      "name": "category-list command - Debug",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/budget_tracker",
+      "args": ["category-list"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "build",
+      "env": {
+        "OPENAI_API_KEY": "***"
       }
     },
     {
