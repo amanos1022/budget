@@ -4,6 +4,8 @@
 
 The Budget Tracker is a command-line application that helps users manage their finances by tracking expenses, setting budgets, and generating reports. It uses an SQLite database to store transaction data, categories, and budget information.
 
+You'll need an openai API key to use this: https://platform.openai.com/
+
 ## Setup Instructions
 
 1. **Install Dependencies:**
@@ -48,6 +50,10 @@ The Budget Tracker is a command-line application that helps users manage their f
    ```
 
 ## Usage
+- **Configure Openai API key**
+```bash
+export OPENAI_API_KEY="your_key"
+```
 
 - **Set Budget:**
 
