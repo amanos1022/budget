@@ -58,7 +58,7 @@ void transaction_list(const char *start_date, const char *end_date, const char *
 
     char sql[512];
     snprintf(sql, sizeof(sql),
-             "SELECT t.date, t.charge, t.description, c.label FROM transactions t "
+             "SELECT t.date, t.charge, t.description, c.label, t.category_id FROM transactions t "
              "JOIN categories c ON t.category_id = c.id "
              "WHERE t.date BETWEEN '%s' AND '%s' %s "
              "ORDER BY t.date;", start_date, end_date, exclude_clause);
@@ -80,6 +80,7 @@ void transaction_list(const char *start_date, const char *end_date, const char *
             json_object_object_add(jobj, "charge", json_object_new_double(sqlite3_column_double(stmt, 1)));
             json_object_object_add(jobj, "description", json_object_new_string((const char *)sqlite3_column_text(stmt, 2)));
             json_object_object_add(jobj, "category", json_object_new_string((const char *)sqlite3_column_text(stmt, 3)));
+            json_object_object_add(jobj, "category_id", json_object_new_int(sqlite3_column_int(stmt, 4)));
             json_object_array_add(jarray, jobj);
         }
         printf("%s\n", json_object_to_json_string(jarray));
@@ -93,14 +94,15 @@ void transaction_list(const char *start_date, const char *end_date, const char *
                    sqlite3_column_text(stmt, 3));
         }
     } else {
-        printf("%-12s | %-10s | %-30s | %-20s\n", "Date", "Charge", "Description", "Category");
-        printf("-------------------------------------------------------------------------------------\n");
+        printf("%-12s | %-10s | %-30s | %-20s | %-10s\n", "Date", "Charge", "Description", "Category", "Category ID");
+        printf("-----------------------------------------------------------------------------------------------\n");
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             const char *date = (const char *)sqlite3_column_text(stmt, 0);
             double charge = sqlite3_column_double(stmt, 1);
             const char *description = (const char *)sqlite3_column_text(stmt, 2);
             const char *category = (const char *)sqlite3_column_text(stmt, 3);
-            printf("%-12s | %-10.2f | %-30s | %-20s\n", date, charge, description, category);
+            int category_id = sqlite3_column_int(stmt, 4);
+            printf("%-12s | %-10.2f | %-30s | %-20s | %-10d\n", date, charge, description, category, category_id);
         }
     }
 
