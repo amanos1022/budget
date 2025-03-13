@@ -148,7 +148,7 @@ void report_spend(const char *date_start, const char *date_end, const char *agg,
         return;
     }
 
-    char sql[512];
+    char sql[512] = {0};
     char exclude_clause[512] = "";
     if (exclude_categories) {
         snprintf(exclude_clause, sizeof(exclude_clause),
@@ -160,17 +160,17 @@ void report_spend(const char *date_start, const char *date_end, const char *agg,
                  "SELECT c.label, SUM(t.charge) FROM transactions t "
                  "JOIN categories c ON t.category_id = c.id "
                  "WHERE t.date BETWEEN '%s' AND '%s' %s "
-                 "GROUP BY c.label;", date_start, date_end);
+                 "GROUP BY c.label;", date_start, date_end, exclude_clause);
     } else if (strcmp(agg, "yearly") == 0) {
         snprintf(sql, sizeof(sql),
                  "SELECT strftime('%%Y', t.date) AS year, SUM(t.charge) FROM transactions t "
                  "WHERE t.date BETWEEN '%s' AND '%s' %s "
-                 "GROUP BY year;", date_start, date_end);
+                 "GROUP BY year;", date_start, date_end, exclude_clause);
     } else if (strcmp(agg, "monthly") == 0) {
         snprintf(sql, sizeof(sql),
                  "SELECT strftime('%%Y-%%m', t.date) AS month, SUM(t.charge) FROM transactions t "
                  "WHERE t.date BETWEEN '%s' AND '%s' %s "
-                 "GROUP BY month;", date_start, date_end);
+                 "GROUP BY month;", date_start, date_end, exclude_clause);
     } else {
         fprintf(stderr, "Invalid aggregation option\n");
         sqlite3_close(db);
