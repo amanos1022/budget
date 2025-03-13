@@ -83,11 +83,23 @@ int main(int argc, char *argv[]) {
             const char *date_start = argv[3] + 13; // Skip "--date-start=" part
             const char *date_end = argv[4] + 11;   // Skip "--date-end=" part
             const char *agg = (argc == 6) ? argv[5] + 6 : NULL; // Skip "--agg=" part if present
-            report_spend(date_start, date_end, agg);
+            const char *exclude_categories = NULL;
+            for (int i = 5; i < argc; i++) {
+                if (strncmp(argv[i], "--exclude-categories=", 21) == 0) {
+                    exclude_categories = argv[i] + 21; // Skip "--exclude-categories=" part
+                }
+            }
+            report_spend(date_start, date_end, agg, exclude_categories);
         } else if (strcmp(argv[2], "budget") == 0 && argc >= 4) {
             if (strncmp(argv[3], "--year=", 7) == 0) {
                 int year = atoi(argv[3] + 7); // Skip "--year=" part
-                report_budget(year);
+                const char *exclude_categories = NULL;
+                for (int i = 4; i < argc; i++) {
+                    if (strncmp(argv[i], "--exclude-categories=", 21) == 0) {
+                        exclude_categories = argv[i] + 21; // Skip "--exclude-categories=" part
+                    }
+                }
+                report_budget(year, exclude_categories);
             } else if (strncmp(argv[3], "--month=", 8) == 0) {
                 const char *month = argv[3] + 8; // Skip "--month=" part
                 report_budget_month(month);

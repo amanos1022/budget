@@ -4,7 +4,7 @@
 #include <string.h>
 #include <math.h>
 
-void report_budget(int year) {
+void report_budget(int year, const char *exclude_categories) {
     sqlite3 *db;
     char *err_msg = 0;
     int rc = sqlite3_open("budget.db", &db);
@@ -40,8 +40,14 @@ void report_budget(int year) {
     }
     sqlite3_finalize(stmt);
 
+    char exclude_clause[512] = "";
+    if (exclude_categories) {
+        snprintf(exclude_clause, sizeof(exclude_clause),
+                 "AND category_id NOT IN (SELECT id FROM categories WHERE label IN (%s))", exclude_categories);
+    }
+
     snprintf(sql, sizeof(sql),
-             "SELECT SUM(charge) FROM transactions WHERE strftime('%%Y', date) = '%d';", year);
+             "SELECT SUM(charge) FROM transactions WHERE strftime('%%Y', date) = '%d' %s;", year, exclude_clause);
 
     rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
 
@@ -130,7 +136,7 @@ void report_budget_month(const char *month) {
     sqlite3_close(db);
 }
 
-void report_spend(const char *date_start, const char *date_end, const char *agg) {
+void report_spend(const char *date_start, const char *date_end, const char *agg, const char *exclude_categories) {
     printf("Reporting spend from %s to %s\n", date_start, date_end);
     sqlite3 *db;
     char *err_msg = 0;
@@ -143,21 +149,27 @@ void report_spend(const char *date_start, const char *date_end, const char *agg)
     }
 
     char sql[512];
+    char exclude_clause[512] = "";
+    if (exclude_categories) {
+        snprintf(exclude_clause, sizeof(exclude_clause),
+                 "AND category_id NOT IN (SELECT id FROM categories WHERE label IN (%s))", exclude_categories);
+    }
+
     if (agg == NULL) {
         snprintf(sql, sizeof(sql),
                  "SELECT c.label, SUM(t.charge) FROM transactions t "
                  "JOIN categories c ON t.category_id = c.id "
-                 "WHERE t.date BETWEEN '%s' AND '%s' "
+                 "WHERE t.date BETWEEN '%s' AND '%s' %s "
                  "GROUP BY c.label;", date_start, date_end);
     } else if (strcmp(agg, "yearly") == 0) {
         snprintf(sql, sizeof(sql),
                  "SELECT strftime('%%Y', t.date) AS year, SUM(t.charge) FROM transactions t "
-                 "WHERE t.date BETWEEN '%s' AND '%s' "
+                 "WHERE t.date BETWEEN '%s' AND '%s' %s "
                  "GROUP BY year;", date_start, date_end);
     } else if (strcmp(agg, "monthly") == 0) {
         snprintf(sql, sizeof(sql),
                  "SELECT strftime('%%Y-%%m', t.date) AS month, SUM(t.charge) FROM transactions t "
-                 "WHERE t.date BETWEEN '%s' AND '%s' "
+                 "WHERE t.date BETWEEN '%s' AND '%s' %s "
                  "GROUP BY month;", date_start, date_end);
     } else {
         fprintf(stderr, "Invalid aggregation option\n");
