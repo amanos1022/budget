@@ -6,56 +6,44 @@ The Budget Tracker is a command-line application that helps users manage their f
 
 ## Setup Instructions
 
-### macOS Installation
-
-1. **Install Homebrew** (if not already installed):
-   Homebrew is a package manager for macOS that simplifies the installation of software.
-
-   ```bash
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   ```
-
-2. **Install Dependencies:**
+1. **Install Dependencies:**
    Use Homebrew to install the necessary dependencies, including SQLite and the JSON-C library.
 
+   debian:
+   ```bash
+   apt-install sqlite json-c
+   ```
+
+   arch:
+   ```bash
+   pacman -Sy sqlite json-c
+   ```
+
+   osx:
    ```bash
    brew install sqlite json-c
    ```
 
-3. **Compile the Application:**
-   Compile the C source code to create the executable.
-
-   ```bash
-   gcc -o budget_tracker budget_tracker.c -lsqlite3 -ljson-c -lcurl
-   ```
-
-1. **Clone the Repository:**
+2. **Clone the Repository:**
 
    ```bash
    git clone <repository-url>
    cd <repository-directory>
    ```
-
-2. **Database Migration:**
+3. **Database Migration:**
    Run the migration script to set up the database schema.
 
    ```bash
    ./migrate_db.sh
    ```
 
-3. **Compile the Application:**
+4. **Compile the Application:**
    Compile the C source code to create the executable.
    ```bash
    gcc -o budget_tracker budget_tracker.c -lsqlite3 -lm
    ```
 
 ## Usage
-
-- **Import Transactions from CSV with Overwrite Option:**
-
-  ```bash
-  ./budget_tracker import --csv=<path-to-csv-file> [--overwrite]
-  ```
 
 - **Set Budget:**
 
@@ -64,15 +52,12 @@ The Budget Tracker is a command-line application that helps users manage their f
   ```
 
 - **Create Category:**
+  When providing a description, it helps to keep in mind the line items you're trying to classify. For instance, if you 
+  wanted to classify getting coffee as "Eating out", adding "cafes" to the description can help the application properly
+  categorize purchase from various coffee chains.
 
   ```bash
   ./budget_tracker create-category --label=<category-label> --description=<category-description>
-  ```
-
-- **Create Category Examples:**
-
-  ```bash
-  ./budget_tracker create-category-examples --examples=<example1,example2> --category-id=<category-id>
   ```
 
 - **List Categories:**
@@ -80,6 +65,21 @@ The Budget Tracker is a command-line application that helps users manage their f
   ```bash
   ./budget_tracker category-list
   ```
+
+- **Create Category Examples:**
+  Category examples are used to help the import script automatically categorize transactions. By providing a couple transactions from your bank account and their appropriate category, you'll greatly increase the accuracy of the classifier mechanism.
+
+  ```bash
+  ./budget_tracker create-category-examples --examples=<example1,example2> --category-id=<category-id>
+  ```
+
+
+- **Import Transactions from CSV with Overwrite Option:**
+
+  ```bash
+  ./budget_tracker import --csv=<path-to-csv-file> [--overwrite]
+  ```
+
 
 - **Report Spend:**
 
