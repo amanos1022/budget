@@ -1,10 +1,37 @@
 import argparse
 
+from transformers import pipeline
+from expense_categorizer.src.datalayer import connect_to_db, get_categories
+
 def infer_category(description):
-    """Placeholder function for category inference."""
+    """Infer category for a given description using zero-shot classification."""
     print(f"Infer category for description: {description}")
-    # Placeholder for actual implementation
-    return None
+
+    # Connect to the database and get categories
+    conn = connect_to_db()
+    if not conn:
+        return None
+
+    categories = get_categories(conn)
+    conn.close()
+
+    # Prepare candidate labels
+    candidate_labels = [f"{label}, {desc}" for label, desc in categories]
+
+    # Initialize the zero-shot classification pipeline
+    classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+
+    # Perform classification
+    result = classifier(description, candidate_labels)
+
+    # Format the result
+    formatted_result = {
+        "labels": [{"label": label.split(",")[0], "id": idx + 1} for idx, label in enumerate(result['labels'])],
+        "scores": result['scores'],
+        "sequence": description
+    }
+
+    return formatted_result
 
 def main():
     parser = argparse.ArgumentParser(description="Expense Categorizer")
