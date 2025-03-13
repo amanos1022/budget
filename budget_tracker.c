@@ -425,7 +425,37 @@ int main(int argc, char *argv[]) {
         int year = atoi(argv[2] + 7); // Skip "--year=" part
         double amount = atof(argv[3] + 9); // Skip "--amount=" part
         set_budget(year, amount);
-    } else if (strcmp(argv[1], "create-category") == 0 && argc == 4) {
+    } else if (strcmp(argv[1], "create-category-examples") == 0 && argc == 4) {
+        const char *examples = argv[2] + 11; // Skip "--examples=" part
+        int category_id = atoi(argv[3] + 14); // Skip "--category-id=" part
+
+        sqlite3 *db;
+        char *err_msg = 0;
+        int rc = sqlite3_open("budget.db", &db);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+            return 1;
+        }
+
+        char *example = strtok((char *)examples, ",");
+        while (example != NULL) {
+            char *sql = sqlite3_mprintf("INSERT INTO category_examples (category_id, example) VALUES (%d, '%q');", category_id, example);
+            rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+            sqlite3_free(sql);
+
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", err_msg);
+                sqlite3_free(err_msg);
+                sqlite3_close(db);
+                return 1;
+            }
+
+            example = strtok(NULL, ",");
+        }
+
+        printf("Examples added to category ID %d\n", category_id);
+        sqlite3_close(db);
         const char *label = argv[2] + 8; // Skip "--label=" part
         const char *description = argv[3] + 14; // Skip "--description=" part
         create_category(label, description);
