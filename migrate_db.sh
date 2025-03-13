@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS budgets(
     year INTEGER PRIMARY KEY,
     amount REAL
 );
+CREATE TABLE IF NOT EXISTS category_examples(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id INTEGER,
+    example TEXT,
+    FOREIGN KEY(category_id) REFERENCES categories(id)
+);
+
 INSERT OR IGNORE INTO categories (label) VALUES ('Other');
 
 EOF
