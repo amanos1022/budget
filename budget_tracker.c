@@ -22,7 +22,7 @@ int get_category_id(sqlite3 *db, const char *description) {
     CURL *curl;
     CURLcode res;
     struct curl_slist *headers = NULL;
-    char *api_key = getevn("OPENAI_API_KEY");
+    char *api_key = getenv("OPENAI_API_KEY");
     if (!api_key) {
         fprintf(stderr, "OpenAI API key not set in environment\n");
         return -1;
