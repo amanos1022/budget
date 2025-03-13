@@ -40,7 +40,7 @@ void set_budget(int year, double amount) {
     sqlite3_close(db);
 }
 
-void transaction_list(const char *start_date, const char *end_date, const char *excluded_categories) {
+void transaction_list(const char *start_date, const char *end_date, const char *excluded_categories, const char *output_format) {
     sqlite3 *db;
     char *err_msg = 0;
     int rc = sqlite3_open("budget.db", &db);
@@ -72,14 +72,36 @@ void transaction_list(const char *start_date, const char *end_date, const char *
         return;
     }
 
-    printf("%-12s | %-10s | %-30s | %-20s\n", "Date", "Charge", "Description", "Category");
-    printf("-------------------------------------------------------------------------------------\n");
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        const char *date = (const char *)sqlite3_column_text(stmt, 0);
-        double charge = sqlite3_column_double(stmt, 1);
-        const char *description = (const char *)sqlite3_column_text(stmt, 2);
-        const char *category = (const char *)sqlite3_column_text(stmt, 3);
-        printf("%-12s | %-10.2f | %-30s | %-20s\n", date, charge, description, category);
+    if (output_format && strcmp(output_format, "json") == 0) {
+        struct json_object *jarray = json_object_new_array();
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            struct json_object *jobj = json_object_new_object();
+            json_object_object_add(jobj, "date", json_object_new_string((const char *)sqlite3_column_text(stmt, 0)));
+            json_object_object_add(jobj, "charge", json_object_new_double(sqlite3_column_double(stmt, 1)));
+            json_object_object_add(jobj, "description", json_object_new_string((const char *)sqlite3_column_text(stmt, 2)));
+            json_object_object_add(jobj, "category", json_object_new_string((const char *)sqlite3_column_text(stmt, 3)));
+            json_object_array_add(jarray, jobj);
+        }
+        printf("%s\n", json_object_to_json_string(jarray));
+        json_object_put(jarray);
+    } else if (output_format && strcmp(output_format, "yaml") == 0) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("- date: %s\n  charge: %.2f\n  description: %s\n  category: %s\n",
+                   sqlite3_column_text(stmt, 0),
+                   sqlite3_column_double(stmt, 1),
+                   sqlite3_column_text(stmt, 2),
+                   sqlite3_column_text(stmt, 3));
+        }
+    } else {
+        printf("%-12s | %-10s | %-30s | %-20s\n", "Date", "Charge", "Description", "Category");
+        printf("-------------------------------------------------------------------------------------\n");
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char *date = (const char *)sqlite3_column_text(stmt, 0);
+            double charge = sqlite3_column_double(stmt, 1);
+            const char *description = (const char *)sqlite3_column_text(stmt, 2);
+            const char *category = (const char *)sqlite3_column_text(stmt, 3);
+            printf("%-12s | %-10.2f | %-30s | %-20s\n", date, charge, description, category);
+        }
     }
 
     sqlite3_finalize(stmt);
@@ -159,12 +181,18 @@ int main(int argc, char *argv[]) {
         const char *start_date = argv[3] + 13; // Skip "--start-date=" part
         const char *end_date = argv[4] + 11;   // Skip "--end-date=" part
         const char *excluded_categories = NULL;
+        const char *output_format = NULL;
         for (int i = 5; i < argc; i++) {
+            if (strcmp(argv[i], "-ojson") == 0) {
+                output_format = "json";
+            } else if (strcmp(argv[i], "-oyaml") == 0) {
+                output_format = "yaml";
+            }
             if (strncmp(argv[i], "--excluded-categories=", 22) == 0) {
                 excluded_categories = argv[i] + 22; // Skip "--excluded-categories=" part
             }
         }
-        transaction_list(start_date, end_date, excluded_categories);
+        transaction_list(start_date, end_date, excluded_categories, output_format);
         printf("Invalid command or options\n");
     }
 
