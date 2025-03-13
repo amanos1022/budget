@@ -82,6 +82,20 @@
           "ignoreFailures": true
         }
       ]
+    },
+    {
+      "name": "Python: Category Infer",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/expense-categorizer/src/main.py",
+      "args": [
+        "category-infer",
+        "--description",
+        "Sample description",
+        "--db-file",
+        "budget.db"
+      ],
+      "console": "integratedTerminal"
     }
   ]
 }
