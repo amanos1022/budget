@@ -167,3 +167,33 @@ void create_category(const char *label, const char *description) {
     sqlite3_close(db);
 }
 
+void category_list() {
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v2(db, "SELECT id, label FROM categories", -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to fetch categories: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    printf("Category ID | Category Label\n");
+    printf("---------------------------\n");
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        int id = sqlite3_column_int(stmt, 0);
+        const unsigned char *label = sqlite3_column_text(stmt, 1);
+        printf("%11d | %s\n", id, label);
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
