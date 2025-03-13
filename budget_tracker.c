@@ -399,7 +399,7 @@ void report_budget(int year) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
+    if (argc < 2) {
         printf("Usage: %s <command> [options]\n", argv[0]);
         return 1;
     }
@@ -485,6 +485,7 @@ int main(int argc, char *argv[]) {
 
         printf("Examples added to category ID %d\n", category_id);
         sqlite3_close(db);
+    } else if (strcmp(argv[1], "create-category") == 0 && argc == 4) {
         const char *label = argv[2] + 8; // Skip "--label=" part
         const char *description = argv[3] + 14; // Skip "--description=" part
         create_category(label, description);
