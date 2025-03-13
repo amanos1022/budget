@@ -6,7 +6,7 @@
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/budget_tracker",
-      "args": ["import", "--csv=data.csv"],
+      "args": ["import", "--csv=data.csv", "--overwrite"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
@@ -19,7 +19,10 @@
           "ignoreFailures": true
         }
       ],
-      "preLaunchTask": "build"
+      "preLaunchTask": "build",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/expense-categorizer/src"
+      }
     },
     {
       "name": "Debug Set-Budget Command",
