@@ -197,3 +197,32 @@ void category_list() {
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
+void create_category_examples(const char *examples, int category_id) {
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("budget.db", &db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    char *example = strtok((char *)examples, ",");
+    while (example != NULL) {
+        char *sql = sqlite3_mprintf("INSERT INTO category_examples (category_id, example) VALUES (%d, '%q');", category_id, example);
+        rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+        sqlite3_free(sql);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", err_msg);
+            sqlite3_free(err_msg);
+            sqlite3_close(db);
+            return;
+        }
+
+        example = strtok(NULL, ",");
+    }
+
+    printf("Examples added to category ID %d\n", category_id);
+    sqlite3_close(db);
+}
