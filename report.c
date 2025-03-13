@@ -152,7 +152,7 @@ void report_spend(const char *date_start, const char *date_end, const char *agg,
     char exclude_clause[512] = "";
     if (exclude_categories) {
         snprintf(exclude_clause, sizeof(exclude_clause),
-                 "AND category_id NOT IN (SELECT id FROM categories WHERE label IN (%s))", exclude_categories);
+                 "AND t.category_id NOT IN (%s)", exclude_categories);
     }
 
     if (agg == NULL) {
