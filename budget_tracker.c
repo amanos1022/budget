@@ -1,7 +1,7 @@
 #define _XOPEN_SOURCE 700
 #include <stdio.h>
-#include <string.h>
-#include <sqlite3.h>
+#include <string.h> 
+#include <sqlite3.h> 
 #include <stdlib.h>
 #include <time.h>
 #include <stdlib.h>
@@ -31,12 +31,10 @@ int get_category_id(sqlite3 *db, const char *description) {
         struct json_object *labels;
         struct json_object *first_label;
         struct json_object *id;
-
         parsed_json = json_tokener_parse(buffer);
         json_object_object_get_ex(parsed_json, "labels", &labels);
         first_label = json_object_array_get_idx(labels, 0);
         json_object_object_get_ex(first_label, "id", &id);
-
         category_id = json_object_get_int(id);
 
         json_object_put(parsed_json); // Free memory
@@ -260,6 +258,11 @@ void import_csv(const char *filename, int overwrite) {
         }
         sqlite3_finalize(check_stmt);
 
+        int category_id = 1; // Default to "Other" category
+        if (atof(charge) < 0) { // Check if the transaction is a debit
+            category_id = get_category_id(db, description);
+        }
+
         if (exists) {
             if (overwrite) {
                 printf("Transaction exists, updating category_id: %s, %s, %s\n", formatted_date, charge, description);
@@ -278,10 +281,6 @@ void import_csv(const char *filename, int overwrite) {
             }
         }
 
-        int category_id = 1; // Default to "Other" category
-        if (atof(charge) < 0) { // Check if the transaction is a debit
-            category_id = get_category_id(db, description);
-        }
         char *insert_sql = sqlite3_mprintf("INSERT INTO transactions (date, charge, description, category_id) VALUES ('%q', %q, '%q', %d);", formatted_date, charge, description, category_id);
         rc = sqlite3_exec(db, insert_sql, 0, 0, &err_msg);
         sqlite3_free(insert_sql);
