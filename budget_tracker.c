@@ -72,14 +72,14 @@ void transaction_list(const char *start_date, const char *end_date, const char *
         return;
     }
 
-    printf("%-12s | %-10s | %-30s | %s\n", "Date", "Charge", "Description", "Category");
-    printf("-------------------------------------------------------------------------------\n");
+    printf("%-12s | %-10s | %-30s | %-20s\n", "Date", "Charge", "Description", "Category");
+    printf("-------------------------------------------------------------------------------------\n");
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         const char *date = (const char *)sqlite3_column_text(stmt, 0);
         double charge = sqlite3_column_double(stmt, 1);
         const char *description = (const char *)sqlite3_column_text(stmt, 2);
         const char *category = (const char *)sqlite3_column_text(stmt, 3);
-        printf("%-12s | %-10.2f | %-30s | %s\n", date, charge, description, category);
+        printf("%-12s | %-10.2f | %-30s | %-20s\n", date, charge, description, category);
     }
 
     sqlite3_finalize(stmt);
