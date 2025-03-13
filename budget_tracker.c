@@ -17,6 +17,7 @@ int get_category_id(sqlite3 *db, const char *description) {
 
     // Use the category-infer command to infer the category
     char command[512];
+    char buffer[1024];
     snprintf(command, sizeof(command), "expense-categorizer category-infer --description=\"%s\"", description);
 
     FILE *fp = popen(command, "r");
