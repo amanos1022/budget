@@ -163,14 +163,16 @@ void report_spend(const char *date_start, const char *date_end, const char *agg,
                  "GROUP BY c.label;", date_start, date_end, exclude_clause);
     } else if (strcmp(agg, "yearly") == 0) {
         snprintf(sql, sizeof(sql),
-                 "SELECT strftime('%%Y', t.date) AS year, SUM(t.charge) FROM transactions t "
+                 "SELECT strftime('%%Y', t.date) AS year, c.label, SUM(t.charge) FROM transactions t "
+                 "JOIN categories c ON t.category_id = c.id "
                  "WHERE t.date BETWEEN '%s' AND '%s' %s "
-                 "GROUP BY year;", date_start, date_end, exclude_clause);
+                 "GROUP BY year, c.label;", date_start, date_end, exclude_clause);
     } else if (strcmp(agg, "monthly") == 0) {
         snprintf(sql, sizeof(sql),
-                 "SELECT strftime('%%Y-%%m', t.date) AS month, SUM(t.charge) FROM transactions t "
+                 "SELECT strftime('%%Y-%%m', t.date) AS month, c.label, SUM(t.charge) FROM transactions t "
+                 "JOIN categories c ON t.category_id = c.id "
                  "WHERE t.date BETWEEN '%s' AND '%s' %s "
-                 "GROUP BY month;", date_start, date_end, exclude_clause);
+                 "GROUP BY month, c.label;", date_start, date_end, exclude_clause);
     } else {
         fprintf(stderr, "Invalid aggregation option\n");
         sqlite3_close(db);
@@ -187,12 +189,23 @@ void report_spend(const char *date_start, const char *date_end, const char *agg,
     }
 
     double total_spend = 0.0;
-    printf("%-15s | %s\n", agg ? (strcmp(agg, "yearly") == 0 ? "Year" : "Month") : "Category", "Spend");
-    printf("-------------------------------\n");
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        const char *label = (const char *)sqlite3_column_text(stmt, 0);
-        double spend = sqlite3_column_double(stmt, 1);
-        printf("%-15s | %.2f\n", label, spend);
+    if (agg == NULL) {
+        printf("%-20s | %s\n", "Category", "Spend");
+        printf("-------------------------------\n");
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char *label = (const char *)sqlite3_column_text(stmt, 0);
+            double spend = sqlite3_column_double(stmt, 1);
+            printf("%-20s | %.2f\n", label, spend);
+        }
+    } else {
+        printf("%-10s | %-20s | %s\n", agg ? (strcmp(agg, "yearly") == 0 ? "Year" : "Month") : "Category", "Category", "Spend");
+        printf("---------------------------------------------\n");
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char *period = (const char *)sqlite3_column_text(stmt, 0);
+            const char *label = (const char *)sqlite3_column_text(stmt, 1);
+            double spend = sqlite3_column_double(stmt, 2);
+            printf("%-10s | %-20s | %.2f\n", period, label, spend);
+        }
         total_spend += spend;
     }
 
