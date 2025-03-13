@@ -43,7 +43,7 @@ void report_budget(int year, const char *exclude_categories) {
     char exclude_clause[512] = "";
     if (exclude_categories) {
         snprintf(exclude_clause, sizeof(exclude_clause),
-                 "AND category_id NOT IN (SELECT id FROM categories WHERE label IN (%s))", exclude_categories);
+                 "AND t.category_id NOT IN (%s)", exclude_categories);
     }
 
     snprintf(sql, sizeof(sql),
