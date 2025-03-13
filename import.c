@@ -77,37 +77,33 @@ void import_csv(const char *filename, int overwrite) {
         }
         sqlite3_finalize(check_stmt);
 
-        int category_id = 1; // Default to "Other" category
-        if (atof(charge) < 0) { // Check if the transaction is a debit
-            category_id = get_category_id(db, description);
-        }
-
-        if (exists) {
-            if (overwrite) {
-                printf("Transaction exists, updating category_id: %s, %s, %s\n", formatted_date, charge, description);
-                char *update_sql = sqlite3_mprintf("UPDATE transactions SET category_id = %d WHERE date = '%q' AND charge = %q AND description = '%q';", category_id, formatted_date, charge, description);
-                rc = sqlite3_exec(db, update_sql, 0, 0, &err_msg);
-                sqlite3_free(update_sql);
-
-                if (rc != SQLITE_OK) {
-                    fprintf(stderr, "SQL error: %s\n", err_msg);
-                    sqlite3_free(err_msg);
-                    break;
-                }
-            } else {
-                printf("Transaction already exists, skipping: %s, %s, %s\n", formatted_date, charge, description);
-                continue;
+        if (!exists) {
+            int category_id = 1; // Default to "Other" category
+            if (atof(charge) < 0) { // Check if the transaction is a debit
+                category_id = get_category_id(db, description);
             }
-        }
 
-        char *insert_sql = sqlite3_mprintf("INSERT INTO transactions (date, charge, description, category_id) VALUES ('%q', %q, '%q', %d);", formatted_date, charge, description, category_id);
-        rc = sqlite3_exec(db, insert_sql, 0, 0, &err_msg);
-        sqlite3_free(insert_sql);
+            char *insert_sql = sqlite3_mprintf("INSERT INTO transactions (date, charge, description, category_id) VALUES ('%q', %q, '%q', %d);", formatted_date, charge, description, category_id);
+            rc = sqlite3_exec(db, insert_sql, 0, 0, &err_msg);
+            sqlite3_free(insert_sql);
 
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", err_msg);
-            sqlite3_free(err_msg);
-            break;
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", err_msg);
+                sqlite3_free(err_msg);
+                break;
+            }
+        } else if (overwrite) {
+            printf("Transaction exists, updating category_id: %s, %s, %s\n", formatted_date, charge, description);
+            int category_id = get_category_id(db, description);
+            char *update_sql = sqlite3_mprintf("UPDATE transactions SET category_id = %d WHERE date = '%q' AND charge = %q AND description = '%q';", category_id, formatted_date, charge, description);
+            rc = sqlite3_exec(db, update_sql, 0, 0, &err_msg);
+            sqlite3_free(update_sql);
+
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", err_msg);
+                sqlite3_free(err_msg);
+                break;
+            }
         }
     }
 
