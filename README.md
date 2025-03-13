@@ -83,15 +83,23 @@ The Budget Tracker is a command-line application that helps users manage their f
   ./budget_tracker import --csv=<path-to-csv-file> [--overwrite]
   ```
 
-- **Report Spend:**
+- **Transaction List:**
+  List transactions within a date range, optionally excluding certain categories and formatting the output in JSON or YAML.
 
   ```bash
-  ./budget_tracker report spend --date-start=<YYYY-MM-DD> --date-end=<YYYY-MM-DD> [--agg=<yearly|monthly>]
+  ./budget_tracker transaction list --start-date=<YYYY-MM-DD> --end-date=<YYYY-MM-DD> [--excluded-categories=<id1,id2,...>] [-ojson|-oyaml]
+  ```
+
+- **Report Spend:**
+  Generate a report of spending within a date range, with options for aggregation and excluding categories. Output can be formatted in JSON.
+
+  ```bash
+  ./budget_tracker report spend --date-start=<YYYY-MM-DD> --date-end=<YYYY-MM-DD> [--agg=<yearly|monthly>] [--exclude-categories=<id1,id2,...>] [-ojson]
   ```
 
 - **Report Budget:**
   ```bash
-  ./budget_tracker report budget --year=<year>
+  ./budget_tracker report budget --year=<year> [--exclude-categories=<id1,id2,...>]
   ./budget_tracker report budget --month=<YYYY-MM>
   ```
 
