@@ -428,8 +428,8 @@ int main(int argc, char *argv[]) {
         set_budget(year, amount);
     } else if (strcmp(argv[1], "create-category") == 0 && argc == 4) {
         const char *label = argv[2] + 8; // Skip "--label=" part
-        const char *regex_pattern = argv[3] + 9; // Skip "--regex=" part
-        create_category(label, regex_pattern);
+        const char *description = argv[3] + 14; // Skip "--description=" part
+        create_category(label, description);
     } else if (strcmp(argv[1], "report") == 0) {
         if (strcmp(argv[2], "spend") == 0 && argc >= 5) {
             const char *date_start = argv[3] + 13; // Skip "--date-start=" part
