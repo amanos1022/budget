@@ -191,7 +191,7 @@ void report_budget_month(const char *month) {
     sqlite3_close(db);
 }
 
-void import_csv(const char *filename) {
+void import_csv(const char *filename, int overwrite) {
     printf("Importing data from %s\n", filename);
     sqlite3 *db;
     char *err_msg = 0;
@@ -261,8 +261,21 @@ void import_csv(const char *filename) {
         sqlite3_finalize(check_stmt);
 
         if (exists) {
-            printf("Transaction already exists, skipping: %s, %s, %s\n", formatted_date, charge, description);
-            continue;
+            if (overwrite) {
+                printf("Transaction exists, updating category_id: %s, %s, %s\n", formatted_date, charge, description);
+                char *update_sql = sqlite3_mprintf("UPDATE transactions SET category_id = %d WHERE date = '%q' AND charge = %q AND description = '%q';", category_id, formatted_date, charge, description);
+                rc = sqlite3_exec(db, update_sql, 0, 0, &err_msg);
+                sqlite3_free(update_sql);
+
+                if (rc != SQLITE_OK) {
+                    fprintf(stderr, "SQL error: %s\n", err_msg);
+                    sqlite3_free(err_msg);
+                    break;
+                }
+            } else {
+                printf("Transaction already exists, skipping: %s, %s, %s\n", formatted_date, charge, description);
+                continue;
+            }
         }
 
         int category_id = 1; // Default to "Other" category
@@ -436,8 +449,23 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    if (strcmp(argv[1], "import") == 0 && argc == 3) {
-        import_csv(argv[2] + 6); // Skip "--csv=" part
+    if (strcmp(argv[1], "import") == 0) {
+        int overwrite = 0;
+        const char *filename = NULL;
+
+        for (int i = 2; i < argc; i++) {
+            if (strncmp(argv[i], "--csv=", 6) == 0) {
+                filename = argv[i] + 6; // Skip "--csv=" part
+            } else if (strcmp(argv[i], "--overwrite") == 0) {
+                overwrite = 1;
+            }
+        }
+
+        if (filename) {
+            import_csv(filename, overwrite);
+        } else {
+            printf("CSV file not specified.\n");
+        }
     } else if (strcmp(argv[1], "set-budget") == 0 && argc == 4) {
         int year = atoi(argv[2] + 7); // Skip "--year=" part
         double amount = atof(argv[3] + 9); // Skip "--amount=" part
