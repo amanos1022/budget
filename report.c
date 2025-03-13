@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <json-c/json.h>
 
 void report_budget(int year, const char *exclude_categories) {
     sqlite3 *db;
@@ -43,7 +44,7 @@ void report_budget(int year, const char *exclude_categories) {
     char exclude_clause[512] = "";
     if (exclude_categories) {
         snprintf(exclude_clause, sizeof(exclude_clause),
-                 "AND t.category_id NOT IN (%s)", exclude_categories);
+                 "AND category_id NOT IN (%s)", exclude_categories);
     }
 
     snprintf(sql, sizeof(sql),

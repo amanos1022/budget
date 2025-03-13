@@ -89,6 +89,34 @@
       "preLaunchTask": "build"
     },
     {
+      "name": "Debug Report spend Command",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/budget_tracker",
+      "args": [
+        "report",
+        "spend",
+        "--date-start=2020-01-01",
+        "--date-end=2026-01-01",
+        "--agg=monthly",
+        "--exclude-categories=8,11,6,9,1",
+        "-ojson"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "build"
+    },
+    {
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",

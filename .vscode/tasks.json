@@ -11,6 +11,9 @@
         "-o",
         "budget_tracker",
         "budget_tracker.c",
+        "report.c",
+        "import.c",
+        "category.c",
         "-lsqlite3",
         "-ljson-c",
         "-lcurl"

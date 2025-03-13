@@ -10,16 +10,19 @@ The Budget Tracker is a command-line application that helps users manage their f
    Use Homebrew to install the necessary dependencies, including SQLite and the JSON-C library.
 
    debian:
+
    ```bash
    apt-install sqlite json-c
    ```
 
    arch:
+
    ```bash
    pacman -Sy sqlite json-c
    ```
 
    osx:
+
    ```bash
    brew install sqlite json-c
    ```
@@ -30,6 +33,7 @@ The Budget Tracker is a command-line application that helps users manage their f
    git clone <repository-url>
    cd <repository-directory>
    ```
+
 3. **Database Migration:**
    Run the migration script to set up the database schema.
 
@@ -52,7 +56,7 @@ The Budget Tracker is a command-line application that helps users manage their f
   ```
 
 - **Create Category:**
-  When providing a description, it helps to keep in mind the line items you're trying to classify. For instance, if you 
+  When providing a description, it helps to keep in mind the line items you're trying to classify. For instance, if you
   wanted to classify getting coffee as "Eating out", adding "cafes" to the description can help the application properly
   categorize purchase from various coffee chains.
 
@@ -73,13 +77,11 @@ The Budget Tracker is a command-line application that helps users manage their f
   ./budget_tracker create-category-examples --examples=<example1,example2> --category-id=<category-id>
   ```
 
-
 - **Import Transactions from CSV with Overwrite Option:**
 
   ```bash
   ./budget_tracker import --csv=<path-to-csv-file> [--overwrite]
   ```
-
 
 - **Report Spend:**
 
