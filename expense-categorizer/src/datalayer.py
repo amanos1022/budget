@@ -15,7 +15,7 @@ def get_categories(conn):
     """Retrieve all categories from the database."""
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT label, description FROM categories WHERE id != 1")
+        cursor.execute("SELECT id, label, description FROM categories WHERE id != 1")
         categories = cursor.fetchall()
         return categories
     except sqlite3.Error as e:
