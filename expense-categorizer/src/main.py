@@ -55,10 +55,10 @@ def classify_expense(description, conn):
     return formatted_result
 
 
-def infer_category(description):
+def infer_category(description, db_file):
     """Infer category for a given description using zero-shot classification."""
 
-    conn = connect_to_db()
+    conn = connect_to_db(db_file)
     categories = get_categories(conn)
     conn.close()
 
@@ -126,11 +126,12 @@ def main():
     parser = argparse.ArgumentParser(description="Expense Categorizer")
     parser.add_argument("command", help="Command to run")
     parser.add_argument("--description", help="Description of the item")
+    parser.add_argument("--db-file", default="budget.db", help="Path to the SQLite database file")
 
     args = parser.parse_args()
 
     if args.command == "category-infer" and args.description:
-        category_id = infer_category(args.description)
+        category_id = infer_category(args.description, args.db_file)
         print(f"{category_id}")
     else:
         print("Invalid command or missing description.")

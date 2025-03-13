@@ -1,7 +1,7 @@
 import sqlite3
 
 
-def connect_to_db(db_name="budget.db"):
+def connect_to_db(db_name):
     """Connect to the SQLite database."""
     try:
         conn = sqlite3.connect(db_name)
