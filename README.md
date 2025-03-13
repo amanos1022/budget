@@ -6,6 +6,29 @@ The Budget Tracker is a command-line application that helps users manage their f
 
 ## Setup Instructions
 
+### macOS Installation
+
+1. **Install Homebrew** (if not already installed):
+   Homebrew is a package manager for macOS that simplifies the installation of software.
+
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. **Install Dependencies:**
+   Use Homebrew to install the necessary dependencies, including SQLite and the JSON-C library.
+
+   ```bash
+   brew install sqlite json-c
+   ```
+
+3. **Compile the Application:**
+   Compile the C source code to create the executable.
+
+   ```bash
+   gcc -o budget_tracker budget_tracker.c -lsqlite3 -ljson-c -lcurl
+   ```
+
 1. **Clone the Repository:**
 
    ```bash
