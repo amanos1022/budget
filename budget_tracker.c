@@ -62,9 +62,33 @@ int get_category_id(sqlite3 *db, const char *description) {
         if(res != CURLE_OK) {
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         } else {
-            // Parse the response to extract the category ID
-            // This is a placeholder for actual parsing logic
-            // category_id = parse_response(response);
+            // Parse the response to extract the category name
+            char buffer[1024];
+            res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &buffer);
+            if (res == CURLE_OK) {
+                struct json_object *parsed_json;
+                struct json_object *choices;
+                struct json_object *message;
+                struct json_object *content;
+
+                parsed_json = json_tokener_parse(buffer);
+                json_object_object_get_ex(parsed_json, "choices", &choices);
+                message = json_object_array_get_idx(choices, 0);
+                json_object_object_get_ex(message, "message", &content);
+                const char *category_name = json_object_get_string(content);
+
+                // Query the database to get the category_id
+                sqlite3_stmt *stmt;
+                char *sql = sqlite3_mprintf("SELECT id FROM categories WHERE label = '%q';", category_name);
+                int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+                sqlite3_free(sql);
+
+                if (rc == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW) {
+                    category_id = sqlite3_column_int(stmt, 0);
+                }
+                sqlite3_finalize(stmt);
+                json_object_put(parsed_json); // Free memory
+            }
         }
 
         curl_easy_cleanup(curl);
