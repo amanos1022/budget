@@ -152,9 +152,9 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[2], "spend") == 0 && argc >= 5) {
             const char *date_start = argv[3] + 13; // Skip "--date-start=" part
             const char *date_end = argv[4] + 11;   // Skip "--date-end=" part
-            const char *agg = (argc == 6) ? argv[5] + 6 : NULL; // Skip "--agg=" part if present
+            const char *agg = (argc >= 5) ? argv[5] + 6 : NULL; // Skip "--agg=" part if present
             const char *exclude_categories = NULL;
-            for (int i = 5; i < argc; i++) {
+            for (int i = 6; i < argc; i++) {
                 if (strncmp(argv[i], "--exclude-categories=", 21) == 0) {
                     exclude_categories = argv[i] + 21; // Skip "--exclude-categories=" part
                 }

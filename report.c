@@ -189,12 +189,13 @@ void report_spend(const char *date_start, const char *date_end, const char *agg,
     }
 
     double total_spend = 0.0;
+    double spend = 0.0;
     if (agg == NULL) {
         printf("%-20s | %s\n", "Category", "Spend");
         printf("-------------------------------\n");
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             const char *label = (const char *)sqlite3_column_text(stmt, 0);
-            double spend = sqlite3_column_double(stmt, 1);
+            spend = sqlite3_column_double(stmt, 1);
             printf("%-20s | %.2f\n", label, spend);
         }
     } else {
@@ -203,7 +204,7 @@ void report_spend(const char *date_start, const char *date_end, const char *agg,
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             const char *period = (const char *)sqlite3_column_text(stmt, 0);
             const char *label = (const char *)sqlite3_column_text(stmt, 1);
-            double spend = sqlite3_column_double(stmt, 2);
+            spend = sqlite3_column_double(stmt, 2);
             printf("%-10s | %-20s | %.2f\n", period, label, spend);
         }
         total_spend += spend;
