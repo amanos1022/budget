@@ -1,11 +1,13 @@
 import argparse
 
-from transformers import pipeline
-from expense_categorizer.src.datalayer import connect_to_db, get_categories
+from transformers import pipeline, logging as hf_logging
+from src.datalayer import connect_to_db, get_categories
+
+hf_logging.set_verbosity_error()
+
 
 def infer_category(description):
     """Infer category for a given description using zero-shot classification."""
-    print(f"Infer category for description: {description}")
 
     # Connect to the database and get categories
     conn = connect_to_db()
@@ -26,12 +28,16 @@ def infer_category(description):
 
     # Format the result
     formatted_result = {
-        "labels": [{"label": label.split(",")[0], "id": idx + 1} for idx, label in enumerate(result['labels'])],
-        "scores": result['scores'],
-        "sequence": description
+        "labels": [
+            {"label": label.split(",")[0], "id": idx + 1}
+            for idx, label in enumerate(result["labels"])
+        ],
+        "scores": result["scores"],
+        "sequence": description,
     }
 
     return formatted_result
+
 
 def main():
     parser = argparse.ArgumentParser(description="Expense Categorizer")
@@ -42,10 +48,10 @@ def main():
 
     if args.command == "category-infer" and args.description:
         category_id = infer_category(args.description)
-        print(f"Category ID: {category_id}")
+        print(f"{category_id}")
     else:
         print("Invalid command or missing description.")
-    print("Welcome to the Expense Categorizer!")
+
 
 if __name__ == "__main__":
     main()
