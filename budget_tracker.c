@@ -11,6 +11,9 @@
 
 int get_category_id(sqlite3 *db, const char *description) {
     int category_id = -1; // Default to -1 indicating no match found
+    int rc;
+    sqlite3_stmt *stmt;
+    char *err_msg = 0;
 
     // Use the category-infer command to infer the category
     char command[512];
