@@ -7,6 +7,7 @@ The Budget Tracker is a command-line application that helps users manage their f
 ## Setup Instructions
 
 1. **Clone the Repository:**
+
    ```bash
    git clone <repository-url>
    cd <repository-directory>
@@ -14,6 +15,7 @@ The Budget Tracker is a command-line application that helps users manage their f
 
 2. **Database Migration:**
    Run the migration script to set up the database schema.
+
    ```bash
    ./migrate_db.sh
    ```
@@ -26,32 +28,38 @@ The Budget Tracker is a command-line application that helps users manage their f
 
 ## Usage
 
-- **Import Transactions from CSV:**
+- **Import Transactions from CSV with Overwrite Option:**
+
   ```bash
-  ./budget_tracker import --csv=<path-to-csv-file>
+  ./budget_tracker import --csv=<path-to-csv-file> [--overwrite]
   ```
 
 - **Set Budget:**
+
   ```bash
   ./budget_tracker set-budget --year=<year> --amount=<amount>
   ```
 
 - **Create Category:**
+
   ```bash
   ./budget_tracker create-category --label=<category-label> --description=<category-description>
   ```
 
 - **Create Category Examples:**
+
   ```bash
   ./budget_tracker create-category-examples --examples=<example1,example2> --category-id=<category-id>
   ```
 
 - **List Categories:**
+
   ```bash
   ./budget_tracker category-list
   ```
 
 - **Report Spend:**
+
   ```bash
   ./budget_tracker report spend --date-start=<YYYY-MM-DD> --date-end=<YYYY-MM-DD> [--agg=<yearly|monthly>]
   ```
