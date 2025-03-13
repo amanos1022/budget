@@ -109,7 +109,16 @@ int main(int argc, char *argv[]) {
         } else {
             printf("Invalid report command or options\n");
         }
-    } else {
+    } else if (strcmp(argv[1], "transaction") == 0 && strcmp(argv[2], "list") == 0 && argc >= 5) {
+        const char *start_date = argv[3] + 13; // Skip "--start-date=" part
+        const char *end_date = argv[4] + 11;   // Skip "--end-date=" part
+        const char *excluded_categories = NULL;
+        for (int i = 5; i < argc; i++) {
+            if (strncmp(argv[i], "--excluded-categories=", 22) == 0) {
+                excluded_categories = argv[i] + 22; // Skip "--excluded-categories=" part
+            }
+        }
+        transaction_list(start_date, end_date, excluded_categories);
         printf("Invalid command or options\n");
     }
 
