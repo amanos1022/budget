@@ -154,12 +154,16 @@ int main(int argc, char *argv[]) {
             const char *date_end = argv[4] + 11;   // Skip "--date-end=" part
             const char *agg = (argc >= 5) ? argv[5] + 6 : NULL; // Skip "--agg=" part if present
             const char *exclude_categories = NULL;
+            const char *output_format = NULL;
             for (int i = 6; i < argc; i++) {
+                if (strcmp(argv[i], "-ojson") == 0) {
+                    output_format = "json";
+                }
                 if (strncmp(argv[i], "--exclude-categories=", 21) == 0) {
                     exclude_categories = argv[i] + 21; // Skip "--exclude-categories=" part
                 }
             }
-            report_spend(date_start, date_end, agg, exclude_categories);
+            report_spend(date_start, date_end, agg, exclude_categories, output_format);
         } else if (strcmp(argv[2], "budget") == 0 && argc >= 4) {
             if (strncmp(argv[3], "--year=", 7) == 0) {
                 int year = atoi(argv[3] + 7); // Skip "--year=" part

@@ -136,7 +136,7 @@ void report_budget_month(const char *month) {
     sqlite3_close(db);
 }
 
-void report_spend(const char *date_start, const char *date_end, const char *agg, const char *exclude_categories) {
+void report_spend(const char *date_start, const char *date_end, const char *agg, const char *exclude_categories, const char *output_format) {
     printf("Reporting spend from %s to %s\n", date_start, date_end);
     sqlite3 *db;
     char *err_msg = 0;
