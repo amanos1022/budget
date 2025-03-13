@@ -38,7 +38,17 @@ The Budget Tracker is a command-line application that helps users manage their f
 
 - **Create Category:**
   ```bash
-  ./budget_tracker create-category --label=<category-label> --regex=<regex-pattern>
+  ./budget_tracker create-category --label=<category-label> --description=<category-description>
+  ```
+
+- **Create Category Examples:**
+  ```bash
+  ./budget_tracker create-category-examples --examples=<example1,example2> --category-id=<category-id>
+  ```
+
+- **List Categories:**
+  ```bash
+  ./budget_tracker category-list
   ```
 
 - **Report Spend:**
@@ -52,6 +62,12 @@ The Budget Tracker is a command-line application that helps users manage their f
   ./budget_tracker report budget --month=<YYYY-MM>
   ```
 
-## License
+## How Category Examples and Import Work with OpenAI Few-Shot Encoding
+
+The Budget Tracker uses OpenAI's few-shot encoding to classify transactions during import. By adding category examples using the `create-category-examples` command, you provide the model with context and examples for each category. This enhances the model's ability to accurately classify transactions based on their descriptions.
+
+When you import transactions using the `import` command, the application queries the database for categories and their examples. It constructs a prompt dynamically, which includes these categories and examples, and sends it to OpenAI's API. The API then returns the most likely category for each transaction, which is used to update the transaction's category in the database.
+
+This approach leverages the power of AI to automate and improve the accuracy of transaction categorization, making it easier for users to manage their finances.
 
 This project is licensed under the MIT License.
