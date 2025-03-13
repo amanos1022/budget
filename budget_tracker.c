@@ -19,6 +19,8 @@ int get_category_id(sqlite3 *db, const char *description) {
         return -1;
     }
 
+    sqlite3_finalize(stmt);
+
     int category_id = -1; // Default to -1 indicating no match found
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
