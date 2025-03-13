@@ -12,7 +12,7 @@ int get_category_id(sqlite3 *db, const char *description) {
     printf("Choose category for this item: \"%s\"\n", description);
     char *err_msg = 0;
     sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, "SELECT id, label, regex_pattern FROM categories", -1, &stmt, 0);
+    int rc = sqlite3_prepare_v2(db, "SELECT id, label FROM categories", -1, &stmt, 0);
 
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to fetch categories: %s\n", sqlite3_errmsg(db));
@@ -20,34 +20,13 @@ int get_category_id(sqlite3 *db, const char *description) {
     }
 
     int category_id = -1; // Default to -1 indicating no match found
-    regex_t regex;
-    int match_found = 0;
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         int id = sqlite3_column_int(stmt, 0);
         const unsigned char *label = sqlite3_column_text(stmt, 1);
-        const unsigned char *pattern = sqlite3_column_text(stmt, 2);
-
-        if (pattern == NULL) {
-            continue;  // Skip this row if the regex pattern is NULL
-        }
-
-        // Compile the regex pattern
-        if (regcomp(&regex, (const char *)pattern, REG_EXTENDED) == 0) {
-            // Check if the description matches the regex pattern
-            if (regexec(&regex, description, 0, NULL, 0) == 0) {
-                category_id = id;
-                match_found = 1;
-                printf("Matched category: %s\n", label);
-                break;
-            }
-            regfree(&regex);
-        }
     }
 
     sqlite3_finalize(stmt);
-
-    if (!match_found) {
         // If no match found, prompt for category
         int option = 1;
         printf("No matching category found. Please select a category:\n");
