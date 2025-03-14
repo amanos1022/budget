@@ -13,12 +13,33 @@
 #include "report.h"
 #include "import.h"
 
+/**
+ * @brief Callback function to write data received from cURL.
+ *
+ * This function is used by cURL to append the received data into a user-provided buffer.
+ *
+ * @param contents Pointer to the data received.
+ * @param size Size of each element in bytes.
+ * @param nmemb Number of elements.
+ * @param userp Pointer to the user-provided buffer where data should be stored.
+ * @return Total number of bytes written to the buffer.
+ */
 size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     size_t totalSize = size * nmemb;
     strncat((char *)userp, (char *)contents, totalSize);
     return totalSize;
 }
 
+/**
+ * @brief Get the category ID for a given transaction description.
+ *
+ * This function queries an external API (OpenAI GPT-4) to categorize a transaction based on its description.
+ * It then retrieves the corresponding category ID from the database.
+ *
+ * @param db Pointer to the SQLite3 database connection.
+ * @param description The transaction description to be categorized.
+ * @return The category ID if found, otherwise -1.
+ */
 int get_category_id(sqlite3 *db, const char *description) {
     int category_id = -1; // Default to -1 indicating no match found
     CURL *curl;
@@ -141,6 +162,15 @@ int get_category_id(sqlite3 *db, const char *description) {
     return category_id;
 }
 
+/**
+ * @brief Create or update a category in the database.
+ *
+ * This function inserts a new category into the database if it does not exist,
+ * or updates the description of an existing category with the same label.
+ *
+ * @param label The label of the category to be created or updated.
+ * @param description The description of the category.
+ */
 void create_category(const char *label, const char *description) {
     sqlite3 *db;
     char *err_msg = 0;
@@ -167,6 +197,12 @@ void create_category(const char *label, const char *description) {
     sqlite3_close(db);
 }
 
+/**
+ * @brief List all categories in the database.
+ *
+ * This function retrieves and prints all categories from the database,
+ * displaying their IDs and labels.
+ */
 void category_list() {
     sqlite3 *db;
     char *err_msg = 0;
@@ -197,6 +233,14 @@ void category_list() {
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
+/**
+ * @brief Create examples for a specific category in the database.
+ *
+ * This function inserts multiple examples into the database for a given category ID.
+ *
+ * @param examples A comma-separated list of example descriptions.
+ * @param category_id The ID of the category to which the examples belong.
+ */
 void create_category_examples(const char *examples, int category_id) {
     sqlite3 *db;
     char *err_msg = 0;

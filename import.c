@@ -8,6 +8,15 @@
 #include "category.h"
 
 
+/**
+ * @brief Import transactions from a CSV file into the database.
+ *
+ * This function reads transaction data from a CSV file and imports it into the SQLite3 database.
+ * It supports overwriting existing transactions if specified.
+ *
+ * @param filename The path to the CSV file containing transaction data.
+ * @param overwrite Flag indicating whether to overwrite existing transactions (1 for true, 0 for false).
+ */
 void import_csv(const char *filename, int overwrite) {
     printf("Importing data from %s\n", filename);
     sqlite3 *db;

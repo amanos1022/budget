@@ -5,6 +5,15 @@
 #include <math.h>
 #include <json-c/json.h>
 
+/**
+ * @brief Generate a budget report for a specific year.
+ *
+ * This function generates and prints a budget report for the specified year,
+ * including total spend and remaining budget. It can exclude certain categories from the calculations.
+ *
+ * @param year The year for which to generate the budget report.
+ * @param exclude_categories A comma-separated list of category IDs to exclude from the report.
+ */
 void report_budget(int year, const char *exclude_categories) {
     sqlite3 *db;
     char *err_msg = 0;
@@ -72,6 +81,14 @@ void report_budget(int year, const char *exclude_categories) {
     sqlite3_close(db);
 }
 
+/**
+ * @brief Generate a budget report for a specific month.
+ *
+ * This function generates and prints a budget report for the specified month,
+ * including total spend and remaining budget. It calculates the monthly budget based on the yearly budget.
+ *
+ * @param month The month for which to generate the budget report in YYYY-MM format.
+ */
 void report_budget_month(const char *month) {
     sqlite3 *db;
     char *err_msg = 0;
@@ -137,6 +154,18 @@ void report_budget_month(const char *month) {
     sqlite3_close(db);
 }
 
+/**
+ * @brief Generate a spend report within a specified date range.
+ *
+ * This function generates and prints a spend report for transactions within the specified date range,
+ * optionally aggregating by year or month, excluding certain categories, and outputting in different formats (JSON or plain text).
+ *
+ * @param date_start The start date of the transaction period (inclusive) in YYYY-MM-DD format.
+ * @param date_end The end date of the transaction period (inclusive) in YYYY-MM-DD format.
+ * @param agg The aggregation level ("yearly" or "monthly"), or NULL for no aggregation.
+ * @param exclude_categories A comma-separated list of category IDs to exclude from the report.
+ * @param output_format The format in which to output the report ("json" or plain text).
+ */
 void report_spend(const char *date_start, const char *date_end, const char *agg, const char *exclude_categories, const char *output_format) {
     printf("Reporting spend from %s to %s\n", date_start, date_end);
     sqlite3 *db;
