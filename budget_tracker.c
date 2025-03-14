@@ -14,6 +14,14 @@
 #include "import.h"
 #include "category.h"
 
+/**
+ * @brief Set the budget for a specific year.
+ *
+ * This function sets or updates the budget amount for a given year in the database.
+ *
+ * @param year The year for which to set the budget.
+ * @param amount The budget amount to be set.
+ */
 void set_budget(int year, double amount) {
     printf("Setting budget for year %d with amount %.2f\n", year, amount);
     sqlite3 *db;
@@ -40,6 +48,17 @@ void set_budget(int year, double amount) {
     sqlite3_close(db);
 }
 
+/**
+ * @brief List transactions within a specified date range.
+ *
+ * This function retrieves and lists transactions from the database that fall within a specified date range,
+ * optionally excluding certain categories and outputting in different formats (JSON or YAML).
+ *
+ * @param start_date The start date of the transaction period (inclusive).
+ * @param end_date The end date of the transaction period (inclusive).
+ * @param excluded_categories A comma-separated list of category IDs to exclude from the results.
+ * @param output_format The format in which to output the transactions ("json" or "yaml").
+ */
 void transaction_list(const char *start_date, const char *end_date, const char *excluded_categories, const char *output_format) {
     sqlite3 *db;
     char *err_msg = 0;
@@ -118,6 +137,25 @@ void transaction_list(const char *start_date, const char *end_date, const char *
     sqlite3_close(db);
 }
 
+/**
+ * @brief Main function for the budget tracker application.
+ *
+ * This function serves as the entry point for the budget tracker application. It parses command-line arguments
+ * and calls appropriate functions based on the provided commands.
+ *
+ * Supported commands:
+ * - import: Import data from a CSV file.
+ * - set-budget: Set or update the budget for a specific year.
+ * - category-list: List all categories.
+ * - create-category-examples: Create examples for a category.
+ * - create-category: Create a new category.
+ * - report: Generate reports on spending and budgets.
+ * - transaction list: List transactions within a specified date range.
+ *
+ * @param argc The number of command-line arguments.
+ * @param argv An array of command-line argument strings.
+ * @return 0 on successful execution, non-zero on error.
+ */
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("Usage: %s <command> [options]\n", argv[0]);
