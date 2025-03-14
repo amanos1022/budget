@@ -96,7 +96,9 @@ void transaction_list(const char *start_date, const char *end_date, const char *
                    sqlite3_column_double(stmt, 1),
                    sqlite3_column_text(stmt, 2),
                    sqlite3_column_text(stmt, 3));
+            total_charge += sqlite3_column_double(stmt, 1);
         }
+        printf("Total Charge: %.2f\n", total_charge);
     } else {
         printf("%-12s | %-10s | %-30s | %-15s | %-12s\n", "Date", "Charge", "Description", "Category", "Category ID");
         printf("-------------------------------------------------------------------------------------------\n");
@@ -107,7 +109,9 @@ void transaction_list(const char *start_date, const char *end_date, const char *
             const char *category = (const char *)sqlite3_column_text(stmt, 3);
             int category_id = sqlite3_column_int(stmt, 4);
             printf("%-12s | %-10.2f | %-30s | %-15s | %-12d\n", date, charge, description, category, category_id);
+            total_charge += sqlite3_column_double(stmt, 1);
         }
+        printf("Total Charge: %.2f\n", total_charge);
     }
 
     sqlite3_finalize(stmt);
