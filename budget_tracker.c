@@ -72,6 +72,8 @@ void transaction_list(const char *start_date, const char *end_date, const char *
         return;
     }
 
+    double total_charge = 0.0;
+
     if (output_format && strcmp(output_format, "json") == 0) {
         struct json_object *jarray = json_object_new_array();
         while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -82,7 +84,11 @@ void transaction_list(const char *start_date, const char *end_date, const char *
             json_object_object_add(jobj, "category", json_object_new_string((const char *)sqlite3_column_text(stmt, 3)));
             json_object_object_add(jobj, "category_id", json_object_new_int(sqlite3_column_int(stmt, 4)));
             json_object_array_add(jarray, jobj);
+            total_charge += charge;
+            total_charge += charge;
         }
+        printf("Total Charge: %.2f\n", total_charge);
+        printf("Total Charge: %.2f\n", total_charge);
         printf("%s\n", json_object_to_json_string(jarray));
         json_object_put(jarray);
     } else if (output_format && strcmp(output_format, "yaml") == 0) {
