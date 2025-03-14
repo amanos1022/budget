@@ -199,7 +199,6 @@ int main(int argc, char *argv[]) {
             }
         }
         transaction_list(start_date, end_date, excluded_categories, output_format);
-        printf("Invalid command or options\n");
     }
 
     return 0;
